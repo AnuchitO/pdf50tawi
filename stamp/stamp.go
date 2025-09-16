@@ -175,10 +175,22 @@ func addTextStamp(inputPDF, outputPDF, signature, logo string) error {
 		{Text: "001", Dx: 525, Dy: -48, FontSize: 14, Position: types.TopLeft},      // bookNumber
 		{Text: "2568-001", Dx: 525, Dy: -62, FontSize: 14, Position: types.TopLeft}, // documentNumber
 
-		// Payer Information (ผู้จ่ายเงิน)
-		{Text: "1 2 3 4 5 6 7 8 9 0 1 2 3", Dx: 378, Dy: -81, FontSize: 16, Position: types.TopLeft},                           // payer taxId (13 digits with spaces)
-		{Text: "บริษัท ตัวอย่าง จำกัด", Dx: 58, Dy: -98, FontSize: 14, Position: types.TopLeft},                                // payer name
-		{Text: "1234567890", Dx: 422, Dy: -98, FontSize: 16, Position: types.TopLeft},                                          // payer taxId10Digit
+		// Payer Information (ผู้จ่ายเงิน) "1 2 3 4 5 6 7 8 9 0 1 2 3"
+		{Text: "1", Dx: 378, Dy: -81, FontSize: 16, Position: types.TopLeft},                    // payer taxId (13 digits with spaces)
+		{Text: "2", Dx: 396, Dy: -81, FontSize: 16, Position: types.TopLeft},                    // payer taxId (13 digits with spaces)
+		{Text: "3", Dx: 408, Dy: -81, FontSize: 16, Position: types.TopLeft},                    // payer taxId (13 digits with spaces)
+		{Text: "4", Dx: 420, Dy: -81, FontSize: 16, Position: types.TopLeft},                    // payer taxId (13 digits with spaces)
+		{Text: "5", Dx: 432, Dy: -81, FontSize: 16, Position: types.TopLeft},                    // payer taxId (13 digits with spaces)
+		{Text: "6", Dx: 450, Dy: -81, FontSize: 16, Position: types.TopLeft},                    // payer taxId (13 digits with spaces)
+		{Text: "7", Dx: 463, Dy: -81, FontSize: 16, Position: types.TopLeft},                    // payer taxId (13 digits with spaces)
+		{Text: "8", Dx: 474, Dy: -81, FontSize: 16, Position: types.TopLeft},                    // payer taxId (13 digits with spaces)
+		{Text: "9", Dx: 486, Dy: -81, FontSize: 16, Position: types.TopLeft},                    // payer taxId (13 digits with spaces)
+		{Text: "0", Dx: 498, Dy: -81, FontSize: 16, Position: types.TopLeft},                    // payer taxId (13 digits with spaces)
+		{Text: "1", Dx: 517, Dy: -81, FontSize: 16, Position: types.TopLeft},                    // payer taxId (13 digits with spaces)
+		{Text: "2", Dx: 529, Dy: -81, FontSize: 16, Position: types.TopLeft},                    // payer taxId (13 digits with spaces)
+		{Text: "3", Dx: 548, Dy: -81, FontSize: 16, Position: types.TopLeft},                    // payer taxId (13 digits with spaces)
+		{Text: "บริษัท ตัวอย่าง จำกัด", Dx: 58, Dy: -98, FontSize: 14, Position: types.TopLeft}, // payer name
+		{Text: "1234567890", Dx: 422, Dy: -98, FontSize: 16, Position: types.TopLeft},           // payer taxId10Digit
 		{Text: "123 ถนนสุขุมวิท แขวงคลองตัน เขตวัฒนา กรุงเทพฯ 10110", Dx: 62, Dy: -124, FontSize: 12, Position: types.TopLeft}, // payer address
 
 		// Payee Information (ผู้ถูกหักภาษี ณ ที่จ่าย)
