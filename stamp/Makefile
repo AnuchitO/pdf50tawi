@@ -1,6 +1,6 @@
 .PHONY: run
 run:
-	go run stamp.go
+	go run stamp.go payload.go
 	open tax50tawi-stamped.pdf
 
 .PHONY: run-with-args
