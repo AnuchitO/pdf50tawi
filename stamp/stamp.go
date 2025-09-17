@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 
 	"github.com/anuchito/pdf50tawi/fonts"
 	"github.com/pdfcpu/pdfcpu/pkg/api"
@@ -76,6 +77,50 @@ func applyTextWatermark(pdfCtx *model.Context, config TextStampConfig) error {
 	wm.Pos = config.Position
 
 	return api.WatermarkContext(pdfCtx, nil, wm)
+}
+
+// generateTaxID13Digits creates individual text stamps for each digit of a tax ID
+func generateTaxID13Digits(taxID string, startX, y float64, fontSize int) []TextStampConfig {
+	var stamps []TextStampConfig
+	digits := strings.ReplaceAll(taxID, " ", "") // Remove spaces
+
+	// X positions for 13-digit tax ID (with spacing for readability)
+	xPositions := []float64{378, 396, 408, 420, 432, 450, 463, 474, 486, 498, 517, 529, 548}
+
+	for i, digit := range digits {
+		if i < len(xPositions) {
+			stamps = append(stamps, TextStampConfig{
+				Text:     string(digit),
+				Dx:       xPositions[i],
+				Dy:       y,
+				FontSize: fontSize,
+				Position: types.TopLeft,
+			})
+		}
+	}
+	return stamps
+}
+
+// generateTaxID10Digits creates individual text stamps for each digit of a tax ID
+func generateTaxID10Digits(taxID string, startX, y float64, fontSize int) []TextStampConfig {
+	var stamps []TextStampConfig
+	digits := strings.ReplaceAll(taxID, " ", "") // Remove spaces
+
+	// X positions for 10-digit tax ID (with spacing for readability)
+	xPositions := []float64{422, 440, 452, 464, 476, 494, 506, 518, 530, 548}
+
+	for i, digit := range digits {
+		if i < len(xPositions) {
+			stamps = append(stamps, TextStampConfig{
+				Text:     string(digit),
+				Dx:       xPositions[i],
+				Dy:       y,
+				FontSize: fontSize,
+				Position: types.TopLeft,
+			})
+		}
+	}
+	return stamps
 }
 
 func addTextStamp(inputPDF, outputPDF, signature, logo string) error {
@@ -169,34 +214,19 @@ func addTextStamp(inputPDF, outputPDF, signature, logo string) error {
 
 	// api.WatermarkContext(pdfCtx, nil, wm22)
 
-	// Define text stamps configuration with demo data - adjusted for Form 50 ทวิ layout
-	textStamps := []TextStampConfig{
-		// Document Details (top right)
-		{Text: "001", Dx: 525, Dy: -48, FontSize: 14, Position: types.TopLeft},      // bookNumber
-		{Text: "2568-001", Dx: 525, Dy: -62, FontSize: 14, Position: types.TopLeft}, // documentNumber
-
-		// Payer Information (ผู้จ่ายเงิน) "1 2 3 4 5 6 7 8 9 0 1 2 3"
-		{Text: "1", Dx: 378, Dy: -81, FontSize: 16, Position: types.TopLeft},                    // payer taxId (13 digits with spaces)
-		{Text: "2", Dx: 396, Dy: -81, FontSize: 16, Position: types.TopLeft},                    // payer taxId (13 digits with spaces)
-		{Text: "3", Dx: 408, Dy: -81, FontSize: 16, Position: types.TopLeft},                    // payer taxId (13 digits with spaces)
-		{Text: "4", Dx: 420, Dy: -81, FontSize: 16, Position: types.TopLeft},                    // payer taxId (13 digits with spaces)
-		{Text: "5", Dx: 432, Dy: -81, FontSize: 16, Position: types.TopLeft},                    // payer taxId (13 digits with spaces)
-		{Text: "6", Dx: 450, Dy: -81, FontSize: 16, Position: types.TopLeft},                    // payer taxId (13 digits with spaces)
-		{Text: "7", Dx: 463, Dy: -81, FontSize: 16, Position: types.TopLeft},                    // payer taxId (13 digits with spaces)
-		{Text: "8", Dx: 474, Dy: -81, FontSize: 16, Position: types.TopLeft},                    // payer taxId (13 digits with spaces)
-		{Text: "9", Dx: 486, Dy: -81, FontSize: 16, Position: types.TopLeft},                    // payer taxId (13 digits with spaces)
-		{Text: "0", Dx: 498, Dy: -81, FontSize: 16, Position: types.TopLeft},                    // payer taxId (13 digits with spaces)
-		{Text: "1", Dx: 517, Dy: -81, FontSize: 16, Position: types.TopLeft},                    // payer taxId (13 digits with spaces)
-		{Text: "2", Dx: 529, Dy: -81, FontSize: 16, Position: types.TopLeft},                    // payer taxId (13 digits with spaces)
-		{Text: "3", Dx: 548, Dy: -81, FontSize: 16, Position: types.TopLeft},                    // payer taxId (13 digits with spaces)
-		{Text: "บริษัท ตัวอย่าง จำกัด", Dx: 58, Dy: -98, FontSize: 14, Position: types.TopLeft}, // payer name
-		{Text: "1234567890", Dx: 422, Dy: -98, FontSize: 16, Position: types.TopLeft},           // payer taxId10Digit
+	payer := []TextStampConfig{
+		// Payer Information (ผู้จ่ายเงิน)
+		{Text: "บริษัท ตัวอย่าง จำกัด", Dx: 58, Dy: -98, FontSize: 14, Position: types.TopLeft},                                // payer name
 		{Text: "123 ถนนสุขุมวิท แขวงคลองตัน เขตวัฒนา กรุงเทพฯ 10110", Dx: 62, Dy: -124, FontSize: 12, Position: types.TopLeft}, // payer address
+	}
+	payer = append(payer, generateTaxID13Digits("1234567890123", 378, -81, 16)...)
+	payer = append(payer, generateTaxID10Digits("0987654321", 422, -98, 16)...) // payer taxId10Digit
 
-		// Payee Information (ผู้ถูกหักภาษี ณ ที่จ่าย)
-		{Text: "9 8 7 6 5 4 3 2 1 0 9 8 7", Dx: 378, Dy: -150, FontSize: 16, Position: types.TopLeft},              // payee taxId (13 digits with spaces)
+	// Payee Information (ผู้ถูกหักภาษี ณ ที่จ่าย)
+	payee := append([]TextStampConfig{}, generateTaxID13Digits("3210987654321", 378, -150, 16)...) // payee taxId (13 digits with spaces)
+	payee = append(payee, generateTaxID10Digits("1234567890", 422, -169, 16)...)                   // payee taxId10Digit
+	payee = append(payee, []TextStampConfig{
 		{Text: "นางสาวสมหญิง นามสกุลยาวไหม", Dx: 58, Dy: -170, FontSize: 14, Position: types.TopLeft},              // payee name
-		{Text: "9876543210", Dx: 422, Dy: -168, FontSize: 16, Position: types.TopLeft},                             // payee taxId10Digit
 		{Text: "555 ต.ทุ่งนา  อ.ทุ่งนา  จ.ชลบุรี  12345", Dx: 62, Dy: -199, FontSize: 12, Position: types.TopLeft}, // payee address
 
 		// Tax Filing Reference (ลำดับที่)
@@ -210,6 +240,13 @@ func addTextStamp(inputPDF, outputPDF, signature, logo string) error {
 		{Text: "/", Dy: -222, Dx: 398, FontSize: 22, Position: types.TopLeft, FontName: "THSarabunNew-Bold"},
 		{Text: "/", Dy: -222, Dx: 291, FontSize: 22, Position: types.TopLeft, FontName: "THSarabunNew-Bold"},
 		{Text: "/", Dy: -222, Dx: 213, FontSize: 22, Position: types.TopLeft, FontName: "THSarabunNew-Bold"},
+	}...)
+
+	// Define text stamps configuration with demo data - adjusted for Form 50 ทวิ layout
+	textStamps := []TextStampConfig{
+		// Document Details (top right)
+		{Text: "001", Dx: 525, Dy: -48, FontSize: 14, Position: types.TopLeft},      // bookNumber
+		{Text: "2568-001", Dx: 525, Dy: -62, FontSize: 14, Position: types.TopLeft}, // documentNumbe
 
 		// Position: Bottom Right
 		// Income Details - Row 1 (เงินเดือน ค่าจาง)
@@ -314,6 +351,9 @@ func addTextStamp(inputPDF, outputPDF, signature, logo string) error {
 		// Certification (ลงชื่อ ผู้จ่ายเงิน และวันที่)
 		{Text: "99/09/2568", Dx: 370, Dy: 70, FontSize: 14, Position: types.BottomLeft}, // dateOfIssuance
 	}
+
+	textStamps = append(textStamps, payer...)
+	textStamps = append(textStamps, payee...)
 
 	// Apply all text stamps
 	for _, stamp := range textStamps {
