@@ -182,66 +182,70 @@ func convertPayloadToTextStampConfig(payload Payload) []TextStampConfig {
 
 		// Income Details - Row 4 (ดอกเบี้ย เงินปันผล) 40 (4) (ข)
 		// (1) (1.1)
-		{Text: payload.IncomeDetails[4].DatePaid, Dx: -205, Dy: 414, FontSize: 14, Position: types.BottomRight},     // datePaid
-		{Text: payload.IncomeDetails[4].AmountPaid, Dx: -109.5, Dy: 414, FontSize: 14, Position: types.BottomRight}, // amountPaid
-		{Text: payload.IncomeDetails[4].TaxWithheld, Dx: -38, Dy: 414, FontSize: 14, Position: types.BottomRight},   // taxWithheld
+		{Text: payload.IncomeDetails[4].DatePaid, Dx: -205, Dy: 429, FontSize: 14, Position: types.BottomRight},     // datePaid
+		{Text: payload.IncomeDetails[4].AmountPaid, Dx: -109.5, Dy: 429, FontSize: 14, Position: types.BottomRight}, // amountPaid
+		{Text: payload.IncomeDetails[4].TaxWithheld, Dx: -38, Dy: 429, FontSize: 14, Position: types.BottomRight},   // taxWithheld
 
 		// Income Details - Row 5 (ดอกเบี้ย เงินปันผล) 40 (4) (ข)
 		// (1) (1.2)
-		{Text: payload.IncomeDetails[5].DatePaid, Dx: -205, Dy: 400, FontSize: 14, Position: types.BottomRight},     // datePaid
-		{Text: payload.IncomeDetails[5].AmountPaid, Dx: -109.5, Dy: 400, FontSize: 14, Position: types.BottomRight}, // amountPaid
-		{Text: payload.IncomeDetails[5].TaxWithheld, Dx: -38, Dy: 400, FontSize: 14, Position: types.BottomRight},   // taxWithheld
+		{Text: payload.IncomeDetails[5].DatePaid, Dx: -205, Dy: 414, FontSize: 14, Position: types.BottomRight},     // datePaid
+		{Text: payload.IncomeDetails[5].AmountPaid, Dx: -109.5, Dy: 414, FontSize: 14, Position: types.BottomRight}, // amountPaid
+		{Text: payload.IncomeDetails[5].TaxWithheld, Dx: -38, Dy: 414, FontSize: 14, Position: types.BottomRight},   // taxWithheld
 
 		// Income Details - Row 6 (ดอกเบี้ย เงินปันผล) 40 (4) (ข)
 		// (1) (1.3)
-		// TODO: fix % symbol not showing
+		// TODO: fix % symbol not showing   /400
 		{Text: "FIX ME", Dx: -385, Dy: 384, FontSize: 12, Position: types.BottomRight},                              // otherRate
-		{Text: payload.IncomeDetails[6].DatePaid, Dx: -205, Dy: 386, FontSize: 14, Position: types.BottomRight},     // datePaid
-		{Text: payload.IncomeDetails[6].AmountPaid, Dx: -109.5, Dy: 386, FontSize: 14, Position: types.BottomRight}, // amountPaid
-		{Text: payload.IncomeDetails[6].TaxWithheld, Dx: -38, Dy: 386, FontSize: 14, Position: types.BottomRight},   // taxWithheld
+		{Text: payload.IncomeDetails[6].DatePaid, Dx: -205, Dy: 400, FontSize: 14, Position: types.BottomRight},     // datePaid
+		{Text: payload.IncomeDetails[6].AmountPaid, Dx: -109.5, Dy: 400, FontSize: 14, Position: types.BottomRight}, // amountPaid
+		{Text: payload.IncomeDetails[6].TaxWithheld, Dx: -38, Dy: 400, FontSize: 14, Position: types.BottomRight},   // taxWithheld
 
 		// Income Details - Row 6 (ดอกเบี้ย เงินปันผล) 40 (4) (ข)
-		// (2) (2.1)
-		{Text: payload.IncomeDetails[7].DatePaid, Dx: -205, Dy: 356, FontSize: 14, Position: types.BottomRight},     // datePaid
-		{Text: payload.IncomeDetails[7].AmountPaid, Dx: -109.5, Dy: 356, FontSize: 14, Position: types.BottomRight}, // amountPaid
-		{Text: payload.IncomeDetails[7].TaxWithheld, Dx: -38, Dy: 356, FontSize: 14, Position: types.BottomRight},   // taxWithheld
+		// (2) (2.1)											386
+		{Text: payload.IncomeDetails[7].DatePaid, Dx: -205, Dy: 386, FontSize: 14, Position: types.BottomRight},     // datePaid
+		{Text: payload.IncomeDetails[7].AmountPaid, Dx: -109.5, Dy: 386, FontSize: 14, Position: types.BottomRight}, // amountPaid
+		{Text: payload.IncomeDetails[7].TaxWithheld, Dx: -38, Dy: 386, FontSize: 14, Position: types.BottomRight},   // taxWithheld
 
 		// Income Details - Row 6 (ดอกเบี้ย เงินปันผล) 40 (4) (ข)
-		// (2) (2.2)
-		{Text: payload.IncomeDetails[8].DatePaid, Dx: -205, Dy: 327, FontSize: 14, Position: types.BottomRight},     // datePaid
-		{Text: payload.IncomeDetails[8].AmountPaid, Dx: -109.5, Dy: 327, FontSize: 14, Position: types.BottomRight}, // amountPaid
-		{Text: payload.IncomeDetails[8].TaxWithheld, Dx: -38, Dy: 327, FontSize: 14, Position: types.BottomRight},   // taxWithheld
+		// (2) (2.2) 										356
+		{Text: payload.IncomeDetails[8].DatePaid, Dx: -205, Dy: 356, FontSize: 14, Position: types.BottomRight},     // datePaid
+		{Text: payload.IncomeDetails[8].AmountPaid, Dx: -109.5, Dy: 356, FontSize: 14, Position: types.BottomRight}, // amountPaid
+		{Text: payload.IncomeDetails[8].TaxWithheld, Dx: -38, Dy: 356, FontSize: 14, Position: types.BottomRight},   // taxWithheld
 
 		// Income Details - Row 6 (ดอกเบี้ย เงินปันผล) 40 (4) (ข)
-		// (2) (2.3)
-		{Text: payload.IncomeDetails[9].DatePaid, Dx: -205, Dy: 298, FontSize: 14, Position: types.BottomRight},     // datePaid
-		{Text: payload.IncomeDetails[9].AmountPaid, Dx: -109.5, Dy: 298, FontSize: 14, Position: types.BottomRight}, // amountPaid
-		{Text: payload.IncomeDetails[9].TaxWithheld, Dx: -38, Dy: 298, FontSize: 14, Position: types.BottomRight},   // taxWithheld
+		// (2) (2.3)						327
+		{Text: payload.IncomeDetails[9].DatePaid, Dx: -205, Dy: 327, FontSize: 14, Position: types.BottomRight},     // datePaid
+		{Text: payload.IncomeDetails[9].AmountPaid, Dx: -109.5, Dy: 327, FontSize: 14, Position: types.BottomRight}, // amountPaid
+		{Text: payload.IncomeDetails[9].TaxWithheld, Dx: -38, Dy: 327, FontSize: 14, Position: types.BottomRight},   // taxWithheld
 
 		// Income Details - Row 6 (ดอกเบี้ย เงินปันผล) 40 (4) (ข)
-		// (2) (2.4)
-		{Text: payload.IncomeDetails[10].DatePaid, Dx: -205, Dy: 282, FontSize: 14, Position: types.BottomRight},     // datePaid
-		{Text: payload.IncomeDetails[10].AmountPaid, Dx: -109.5, Dy: 282, FontSize: 14, Position: types.BottomRight}, // amountPaid
-		{Text: payload.IncomeDetails[10].TaxWithheld, Dx: -38, Dy: 282, FontSize: 14, Position: types.BottomRight},   // taxWithheld
+		// (2) (2.4)  						298
+		{Text: payload.IncomeDetails[10].DatePaid, Dx: -205, Dy: 298, FontSize: 14, Position: types.BottomRight},     // datePaid
+		{Text: payload.IncomeDetails[10].AmountPaid, Dx: -109.5, Dy: 298, FontSize: 14, Position: types.BottomRight}, // amountPaid
+		{Text: payload.IncomeDetails[10].TaxWithheld, Dx: -38, Dy: 298, FontSize: 14, Position: types.BottomRight},   // taxWithheld
 
 		// Income Details - Row 6 (ดอกเบี้ย เงินปันผล) 40 (4) (ข)
-		// (2) (2.5)
+		// (2) (2.5)					282
 		{Text: "FIX ME 40 (4) (ข) (2) (2.5)", Dx: 150, Dy: 268, FontSize: 12, Position: types.BottomLeft},            // otherRate
-		{Text: payload.IncomeDetails[11].DatePaid, Dx: -205, Dy: 270, FontSize: 14, Position: types.BottomRight},     // datePaid
-		{Text: payload.IncomeDetails[11].AmountPaid, Dx: -109.5, Dy: 270, FontSize: 14, Position: types.BottomRight}, // amountPaid
-		{Text: payload.IncomeDetails[11].TaxWithheld, Dx: -38, Dy: 270, FontSize: 14, Position: types.BottomRight},   // taxWithheld
+		{Text: payload.IncomeDetails[11].DatePaid, Dx: -205, Dy: 282, FontSize: 14, Position: types.BottomRight},     // datePaid
+		{Text: payload.IncomeDetails[11].AmountPaid, Dx: -109.5, Dy: 282, FontSize: 14, Position: types.BottomRight}, // amountPaid
+		{Text: payload.IncomeDetails[11].TaxWithheld, Dx: -38, Dy: 282, FontSize: 14, Position: types.BottomRight},   // taxWithheld
 
-		// Income Details - Row 7 5. การจ่ายเงินได้ที่ต้องหักภาษี ณ ที่จ่าย
-		{Text: payload.IncomeDetails[12].DatePaid, Dx: -205, Dy: 248, FontSize: 14, Position: types.BottomRight},     // datePaid
-		{Text: payload.IncomeDetails[12].AmountPaid, Dx: -109.5, Dy: 248, FontSize: 14, Position: types.BottomRight}, // amountPaid
-		{Text: payload.IncomeDetails[12].TaxWithheld, Dx: -38, Dy: 248, FontSize: 14, Position: types.BottomRight},   // taxWithheld
+		// Income Details - Row 7 5. การจ่ายเงินได้ที่ต้องหักภาษี ณ ที่จ่าย  270
+		{Text: payload.IncomeDetails[12].DatePaid, Dx: -205, Dy: 270, FontSize: 14, Position: types.BottomRight},     // datePaid
+		{Text: payload.IncomeDetails[12].AmountPaid, Dx: -109.5, Dy: 270, FontSize: 14, Position: types.BottomRight}, // amountPaid
+		{Text: payload.IncomeDetails[12].TaxWithheld, Dx: -38, Dy: 270, FontSize: 14, Position: types.BottomRight},   // taxWithheld
+
+		{Text: payload.IncomeDetails[13].DatePaid, Dx: -205, Dy: 212, FontSize: 14, Position: types.BottomRight},     // datePaid
+		{Text: payload.IncomeDetails[13].AmountPaid, Dx: -109.5, Dy: 212, FontSize: 14, Position: types.BottomRight}, // amountPaid
+		{Text: payload.IncomeDetails[13].TaxWithheld, Dx: -38, Dy: 212, FontSize: 14, Position: types.BottomRight},   // taxWithheld
 
 		// Income Details - Row 8 6. อื่น ๆ (ระบุ)
 		{Text: "อื่นอื่นอื่นอื่นอื่นอื่นอื่นอื่นอื่น", Dx: 102, Dy: 196, FontSize: 12, Position: types.BottomLeft},   // otherRate
-		{Text: payload.IncomeDetails[13].DatePaid, Dx: -205, Dy: 198, FontSize: 14, Position: types.BottomRight},     // datePaid
-		{Text: payload.IncomeDetails[13].AmountPaid, Dx: -109.5, Dy: 198, FontSize: 14, Position: types.BottomRight}, // amountPaid
-		{Text: payload.IncomeDetails[13].TaxWithheld, Dx: -38, Dy: 198, FontSize: 14, Position: types.BottomRight},   // taxWithheld
-
+		{Text: payload.IncomeDetails[14].DatePaid, Dx: -205, Dy: 198, FontSize: 14, Position: types.BottomRight},     // datePaid
+		{Text: payload.IncomeDetails[14].AmountPaid, Dx: -109.5, Dy: 198, FontSize: 14, Position: types.BottomRight}, // amountPaid
+		{Text: payload.IncomeDetails[14].TaxWithheld, Dx: -38, Dy: 198, FontSize: 14, Position: types.BottomRight},   // taxWithheld
+		//
 		// Totals (รวม)
 		{Text: payload.Totals.TotalAmountPaid, Dx: -109.5, Dy: 176, FontSize: 14, Position: types.BottomRight}, // totalAmountPaid
 		{Text: payload.Totals.TotalTaxWithheld, Dx: -38, Dy: 176, FontSize: 14, Position: types.BottomRight},   // totalTaxWithheld
@@ -430,4 +434,5 @@ func addTextStamp(inputPDF, outputPDF, signature, logo string) error {
 
 // TODO List:
 // [ ] define key value name for each
-// [ ] stamp image with
+// [ ] stamp image with base64
+// [ ] copy- original and copy
