@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"flag"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"strings"
@@ -405,7 +406,7 @@ func addTextStamp(inputPDF, outputPDF, signature, logo string) error {
 	// 4. bytes
 
 	// demo base64 payload.Certificate.PayerSignatureImage
-	b64 := DemoPayload().Certification.PayerSignatureImage
+	b64 := DemoPayload().Certification.PayerSignatureImageBase64
 	// Remove data URL prefix if present
 	if strings.HasPrefix(b64, "data:") {
 		parts := strings.SplitN(b64, ",", 2)
@@ -417,21 +418,10 @@ func addTextStamp(inputPDF, outputPDF, signature, logo string) error {
 	reader := base64.NewDecoder(base64.StdEncoding, strings.NewReader(b64))
 
 	// Create image watermark from reader
-	wm, err := api.ImageWatermarkForReader(reader, "", true, false, types.POINTS)
+	wm, err := ImageWatermark(reader, types.BottomLeft, 360, 82, 0.08, 1, false)
 	if err != nil {
 		return err
 	}
-
-	wm.Dy = 82
-	wm.Dx = 360
-	wm.Scale = 0.08
-	wm.ScaleAbs = true
-	wm.Opacity = 1.0
-	wm.Diagonal = 0
-	wm.Rotation = 0
-	wm.HAlign = alignLeft()
-	wm.OnTop = false
-	wm.Pos = types.BottomLeft
 
 	if err := api.WatermarkContext(pdfCtx, nil, wm); err != nil {
 		return err
@@ -465,3 +455,21 @@ func addTextStamp(inputPDF, outputPDF, signature, logo string) error {
 // [ ] define key value name for each
 // [ ] stamp image with base64
 // [ ] copy- original and copy
+
+// Stamp Image take reader
+func ImageWatermark(reader io.Reader, pos types.Anchor, dx, dy float64, scale float64, opacity float64, onTop bool) (*model.Watermark, error) {
+	wm, err := api.ImageWatermarkForReader(reader, "", true, false, types.POINTS)
+	if err != nil {
+		return nil, err
+	}
+	wm.Dy = dy
+	wm.Dx = dx
+	wm.Scale = scale
+	wm.ScaleAbs = true
+	wm.Opacity = opacity
+	wm.Diagonal = 0
+	wm.Rotation = 0
+	wm.OnTop = onTop
+	wm.Pos = pos
+	return wm, nil
+}
