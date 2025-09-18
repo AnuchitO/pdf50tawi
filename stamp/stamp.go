@@ -123,6 +123,13 @@ func generateTaxID10Digits(taxID string, startX, y float64, fontSize int) []Text
 	return stamps
 }
 
+func checkPnd(pnd bool) string {
+	if pnd {
+		return "/" // TODO: fix "✔" character
+	}
+	return " "
+}
+
 // convert data from Payload to TextStampConfig
 func convertPayloadToTextStampConfig(payload Payload) []TextStampConfig {
 
@@ -141,16 +148,16 @@ func convertPayloadToTextStampConfig(payload Payload) []TextStampConfig {
 		{Text: payload.Payee.Name, Dx: 58, Dy: -170, FontSize: 14, Position: types.TopLeft},    // payee name
 		{Text: payload.Payee.Address, Dx: 62, Dy: -199, FontSize: 12, Position: types.TopLeft}, // payee address
 		// Tax Filing Reference (ลำดับที่)
-		{Text: payload.TaxFilingReference.SequenceNumber, Dx: 100, Dy: -225, FontSize: 14, Position: types.TopLeft}, // sequenceNumber
+		{Text: payload.Payee.SequenceNumber, Dx: 100, Dy: -225, FontSize: 14, Position: types.TopLeft}, // sequenceNumber
 
 		// TODO: fix "✔" character
-		{Text: "/", Dy: -240, Dx: 398, FontSize: 22, Position: types.TopLeft, FontName: "THSarabunNew-Bold"},
-		{Text: "/", Dy: -240, Dx: 291, FontSize: 22, Position: types.TopLeft, FontName: "THSarabunNew-Bold"},
-		{Text: "/", Dy: -240, Dx: 213, FontSize: 22, Position: types.TopLeft, FontName: "THSarabunNew-Bold"},
-		{Text: "/", Dy: -222, Dx: 476, FontSize: 22, Position: types.TopLeft, FontName: "THSarabunNew-Bold"},
-		{Text: "/", Dy: -222, Dx: 398, FontSize: 22, Position: types.TopLeft, FontName: "THSarabunNew-Bold"},
-		{Text: "/", Dy: -222, Dx: 291, FontSize: 22, Position: types.TopLeft, FontName: "THSarabunNew-Bold"},
-		{Text: "/", Dy: -222, Dx: 213, FontSize: 22, Position: types.TopLeft, FontName: "THSarabunNew-Bold"},
+		{Text: checkPnd(payload.Payee.Pnd_1a), Dy: -222, Dx: 213, FontSize: 22, Position: types.TopLeft, FontName: "THSarabunNew-Bold"},
+		{Text: checkPnd(payload.Payee.Pnd_1aSpecial), Dy: -222, Dx: 291, FontSize: 22, Position: types.TopLeft, FontName: "THSarabunNew-Bold"},
+		{Text: checkPnd(payload.Payee.Pnd_2), Dy: -222, Dx: 398, FontSize: 22, Position: types.TopLeft, FontName: "THSarabunNew-Bold"},
+		{Text: checkPnd(payload.Payee.Pnd_2a), Dy: -240, Dx: 213, FontSize: 22, Position: types.TopLeft, FontName: "THSarabunNew-Bold"},
+		{Text: checkPnd(payload.Payee.Pnd_3), Dy: -222, Dx: 476, FontSize: 22, Position: types.TopLeft, FontName: "THSarabunNew-Bold"},
+		{Text: checkPnd(payload.Payee.Pnd_3a), Dy: -240, Dx: 291, FontSize: 22, Position: types.TopLeft, FontName: "THSarabunNew-Bold"},
+		{Text: checkPnd(payload.Payee.Pnd_53), Dy: -240, Dx: 398, FontSize: 22, Position: types.TopLeft, FontName: "THSarabunNew-Bold"},
 	}...)
 
 	// Define text stamps configuration with demo data - adjusted for Form 50 ทวิ layout

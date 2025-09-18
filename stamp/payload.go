@@ -13,19 +13,18 @@ type Payer struct {
 }
 
 type Payee struct {
-	TaxID        string `json:"taxId"`
-	TaxID10Digit string `json:"taxId10Digit"`
-	Name         string `json:"name"`
-	Address      string `json:"address"`
-}
-
-type Form struct {
-	Selected bool `json:"selected"`
-}
-
-type TaxFilingReference struct {
+	TaxID          string `json:"taxId"`
+	TaxID10Digit   string `json:"taxId10Digit"`
+	Name           string `json:"name"`
+	Address        string `json:"address"`
 	SequenceNumber string `json:"sequenceNumber"`
-	Forms          []Form `json:"forms"`
+	Pnd_1a         bool   `json:"pnd_1a"`
+	Pnd_1aSpecial  bool   `json:"pnd_1aSpecial"`
+	Pnd_2          bool   `json:"pnd_2"`
+	Pnd_3          bool   `json:"pnd_3"`
+	Pnd_2a         bool   `json:"pnd_2a"`
+	Pnd_3a         bool   `json:"pnd_3a"`
+	Pnd_53         bool   `json:"pnd_53"`
 }
 
 type IncomeDetail struct {
@@ -94,29 +93,28 @@ type Certification struct {
 }
 
 type Payload struct {
-	DocumentDetails    DocumentDetails    `json:"documentDetails"`
-	Payer              Payer              `json:"payer"`
-	Payee              Payee              `json:"payee"`
-	TaxFilingReference TaxFilingReference `json:"taxFilingReference"`
-	Income40_1         IncomeDetail       `json:"income40_1"`
-	Income40_2         IncomeDetail       `json:"income40_2"`
-	Income40_3         IncomeDetail       `json:"income40_3"`
-	Income40_4A        IncomeDetail       `json:"income40_4A"`
-	Income40_4B_1_1    IncomeDetail       `json:"income40_4B_1_1"`
-	Income40_4B_1_2    IncomeDetail       `json:"income40_4B_1_2"`
-	Income40_4B_1_3    IncomeDetail       `json:"income40_4B_1_3"`
-	Income40_4B_1_4    IncomeDetail       `json:"income40_4B_1_4"`
-	Income40_4B_2_1    IncomeDetail       `json:"income40_4B_2_1"`
-	Income40_4B_2_2    IncomeDetail       `json:"income40_4B_2_2"`
-	Income40_4B_2_3    IncomeDetail       `json:"income40_4B_2_3"`
-	Income40_4B_2_4    IncomeDetail       `json:"income40_4B_2_4"`
-	Income40_4B_2_5    IncomeDetail       `json:"income40_4B_2_5"`
-	Income40_5         IncomeDetail       `json:"income40_5"`
-	Income40_6         IncomeDetail       `json:"income40_6"`
-	Totals             Totals             `json:"totals"`
-	OtherPayments      OtherPayments      `json:"otherPayments"`
-	WithholdingType    WithholdingType    `json:"withholdingType"`
-	Certification      Certification      `json:"certification"`
+	DocumentDetails DocumentDetails `json:"documentDetails"`
+	Payer           Payer           `json:"payer"`
+	Payee           Payee           `json:"payee"`
+	Income40_1      IncomeDetail    `json:"income40_1"`
+	Income40_2      IncomeDetail    `json:"income40_2"`
+	Income40_3      IncomeDetail    `json:"income40_3"`
+	Income40_4A     IncomeDetail    `json:"income40_4A"`
+	Income40_4B_1_1 IncomeDetail    `json:"income40_4B_1_1"`
+	Income40_4B_1_2 IncomeDetail    `json:"income40_4B_1_2"`
+	Income40_4B_1_3 IncomeDetail    `json:"income40_4B_1_3"`
+	Income40_4B_1_4 IncomeDetail    `json:"income40_4B_1_4"`
+	Income40_4B_2_1 IncomeDetail    `json:"income40_4B_2_1"`
+	Income40_4B_2_2 IncomeDetail    `json:"income40_4B_2_2"`
+	Income40_4B_2_3 IncomeDetail    `json:"income40_4B_2_3"`
+	Income40_4B_2_4 IncomeDetail    `json:"income40_4B_2_4"`
+	Income40_4B_2_5 IncomeDetail    `json:"income40_4B_2_5"`
+	Income40_5      IncomeDetail    `json:"income40_5"`
+	Income40_6      IncomeDetail    `json:"income40_6"`
+	Totals          Totals          `json:"totals"`
+	OtherPayments   OtherPayments   `json:"otherPayments"`
+	WithholdingType WithholdingType `json:"withholdingType"`
+	Certification   Certification   `json:"certification"`
 }
 
 // demo payload
@@ -133,16 +131,18 @@ func DemoPayload() Payload {
 			Address:      "123 ถนนสุขุมวิท แขวงคลองตัน เขตวัฒนา กรุงเทพฯ 10110",
 		},
 		Payee: Payee{
-			TaxID:        "3210987654321",
-			TaxID10Digit: "1234567890",
-			Name:         "นางสาวสมชาย นามสกุลยาวมากไหมนะก็ไม่รู้เหมือนกัน",
-			Address:      "555 ต.ทุ่งนา  อ.ทุ่งนา  จ.ชลบุรี  12345",
-		},
-		TaxFilingReference: TaxFilingReference{
+			TaxID:          "3210987654321",
+			TaxID10Digit:   "1234567890",
+			Name:           "นางสาวสมชาย นามสกุลยาวมากไหมนะก็ไม่รู้เหมือนกัน",
+			Address:        "555 ต.ทุ่งนา  อ.ทุ่งนา  จ.ชลบุรี  12345",
 			SequenceNumber: "001",
-			Forms: []Form{
-				{Selected: true},
-			},
+			Pnd_1a:         true,
+			Pnd_1aSpecial:  true,
+			Pnd_2:          true,
+			Pnd_3:          true,
+			Pnd_2a:         true,
+			Pnd_3a:         true,
+			Pnd_53:         true,
 		},
 		Income40_1:      IncomeDetail{DatePaid: "01/01/2568", AmountPaid: "401,010.01", TaxWithheld: "12,030.30"},
 		Income40_2:      IncomeDetail{DatePaid: "02/02/2568", AmountPaid: "402,020.02", TaxWithheld: "12,060.60"},
