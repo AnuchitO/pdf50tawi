@@ -77,13 +77,12 @@ type OtherPayments struct {
 	ProvidentFund         string `json:"providentFund"`
 }
 
-type WithholdingOption struct {
-	Selected bool   `json:"selected"`
-	Details  string `json:"details,omitempty"`
-}
-
 type WithholdingType struct {
-	Options []WithholdingOption `json:"options"`
+	WithholdingTax bool   `json:"withholdingTax"`
+	Forever        bool   `json:"forever"`
+	OneTime        bool   `json:"oneTime"`
+	Other          bool   `json:"other"`
+	OtherDetails   string `json:"otherDetails"`
 }
 
 type Certification struct {
@@ -172,11 +171,11 @@ func DemoPayload() Payload {
 			ProvidentFund:         "44,444.44",
 		},
 		WithholdingType: WithholdingType{
-			Options: []WithholdingOption{
-				{Selected: true, Details: "ออกให้ตลอดไป"},
-				{Selected: false, Details: "ออกให้ครั้งเดียว"},
-				{Selected: false, Details: "อื่นๆ (ระบุ)"},
-			},
+			WithholdingTax: true,
+			Forever:        true,
+			OneTime:        true,
+			Other:          true,
+			OtherDetails:   "อื่นๆ (อื่นๆ) อื่นๆ อื่นๆ อื่นๆ",
 		},
 		Certification: Certification{
 			PayerSignature:     "นายตัวอย่าง ใจดี",

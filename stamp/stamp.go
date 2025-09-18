@@ -123,7 +123,7 @@ func generateTaxID10Digits(taxID string, startX, y float64, fontSize int) []Text
 	return stamps
 }
 
-func checkPnd(pnd bool) string {
+func tick(pnd bool) string {
 	if pnd {
 		return "/" // TODO: fix "✔" character
 	}
@@ -151,13 +151,13 @@ func convertPayloadToTextStampConfig(payload Payload) []TextStampConfig {
 		{Text: payload.Payee.SequenceNumber, Dx: 100, Dy: -225, FontSize: 14, Position: types.TopLeft}, // sequenceNumber
 
 		// TODO: fix "✔" character
-		{Text: checkPnd(payload.Payee.Pnd_1a), Dy: -222, Dx: 213, FontSize: 22, Position: types.TopLeft, FontName: "THSarabunNew-Bold"},
-		{Text: checkPnd(payload.Payee.Pnd_1aSpecial), Dy: -222, Dx: 291, FontSize: 22, Position: types.TopLeft, FontName: "THSarabunNew-Bold"},
-		{Text: checkPnd(payload.Payee.Pnd_2), Dy: -222, Dx: 398, FontSize: 22, Position: types.TopLeft, FontName: "THSarabunNew-Bold"},
-		{Text: checkPnd(payload.Payee.Pnd_2a), Dy: -240, Dx: 213, FontSize: 22, Position: types.TopLeft, FontName: "THSarabunNew-Bold"},
-		{Text: checkPnd(payload.Payee.Pnd_3), Dy: -222, Dx: 476, FontSize: 22, Position: types.TopLeft, FontName: "THSarabunNew-Bold"},
-		{Text: checkPnd(payload.Payee.Pnd_3a), Dy: -240, Dx: 291, FontSize: 22, Position: types.TopLeft, FontName: "THSarabunNew-Bold"},
-		{Text: checkPnd(payload.Payee.Pnd_53), Dy: -240, Dx: 398, FontSize: 22, Position: types.TopLeft, FontName: "THSarabunNew-Bold"},
+		{Text: tick(payload.Payee.Pnd_1a), Dy: -222, Dx: 213, FontSize: 22, Position: types.TopLeft, FontName: "THSarabunNew-Bold"},
+		{Text: tick(payload.Payee.Pnd_1aSpecial), Dy: -222, Dx: 291, FontSize: 22, Position: types.TopLeft, FontName: "THSarabunNew-Bold"},
+		{Text: tick(payload.Payee.Pnd_2), Dy: -222, Dx: 398, FontSize: 22, Position: types.TopLeft, FontName: "THSarabunNew-Bold"},
+		{Text: tick(payload.Payee.Pnd_2a), Dy: -240, Dx: 213, FontSize: 22, Position: types.TopLeft, FontName: "THSarabunNew-Bold"},
+		{Text: tick(payload.Payee.Pnd_3), Dy: -222, Dx: 476, FontSize: 22, Position: types.TopLeft, FontName: "THSarabunNew-Bold"},
+		{Text: tick(payload.Payee.Pnd_3a), Dy: -240, Dx: 291, FontSize: 22, Position: types.TopLeft, FontName: "THSarabunNew-Bold"},
+		{Text: tick(payload.Payee.Pnd_53), Dy: -240, Dx: 398, FontSize: 22, Position: types.TopLeft, FontName: "THSarabunNew-Bold"},
 	}...)
 
 	// Define text stamps configuration with demo data - adjusted for Form 50 ทวิ layout
@@ -203,7 +203,7 @@ func convertPayloadToTextStampConfig(payload Payload) []TextStampConfig {
 		// {Text: payload.Income40_4B_1_3.TaxWithheld, Dx: -38, Dy: 400, FontSize: 14, Position: types.BottomRight},   // taxWithheld
 
 		// Income Details - Row 6 (ดอกเบี้ย เงินปันผล) 40 (4) (ข) (1) (1.3)
-		{Text: "FIX ME", Dx: -385, Dy: 384, FontSize: 12, Position: types.BottomRight},                             // otherRate
+		{Text: "FIX ME", Dx: -375, Dy: 384, FontSize: 12, Position: types.BottomRight},                             // otherRate
 		{Text: payload.Income40_4B_1_4.DatePaid, Dx: -205, Dy: 386, FontSize: 14, Position: types.BottomRight},     // datePaid
 		{Text: payload.Income40_4B_1_4.AmountPaid, Dx: -109.5, Dy: 386, FontSize: 14, Position: types.BottomRight}, // amountPaid
 		{Text: payload.Income40_4B_1_4.TaxWithheld, Dx: -38, Dy: 386, FontSize: 14, Position: types.BottomRight},   // taxWithheld
@@ -256,11 +256,11 @@ func convertPayloadToTextStampConfig(payload Payload) []TextStampConfig {
 		{Text: payload.OtherPayments.SocialSecurityFund, Dx: -190, Dy: 139, FontSize: 12, Position: types.BottomRight},    // socialSecurityFund
 		{Text: payload.OtherPayments.ProvidentFund, Dx: -54, Dy: 139, FontSize: 12, Position: types.BottomRight},          // providentFund
 
-		{Text: "/", Dx: 86, Dy: 110, FontSize: 22, Position: types.BottomLeft, FontName: "THSarabunNew-Bold"},
-		{Text: "/", Dx: 178, Dy: 110, FontSize: 22, Position: types.BottomLeft, FontName: "THSarabunNew-Bold"},
-		{Text: "/", Dx: 286, Dy: 110, FontSize: 22, Position: types.BottomLeft, FontName: "THSarabunNew-Bold"},
-		{Text: "/", Dx: 397, Dy: 110, FontSize: 22, Position: types.BottomLeft, FontName: "THSarabunNew-Bold"},
-		{Text: "อื่นอื่นอื่นอื่นอื่นอื่นอื่นอื่น", Dx: 470, Dy: 117, FontSize: 12, Position: types.BottomLeft},
+		{Text: tick(payload.WithholdingType.WithholdingTax), Dx: 86, Dy: 110, FontSize: 22, Position: types.BottomLeft, FontName: "THSarabunNew-Bold"},
+		{Text: tick(payload.WithholdingType.Forever), Dx: 178, Dy: 110, FontSize: 22, Position: types.BottomLeft, FontName: "THSarabunNew-Bold"},
+		{Text: tick(payload.WithholdingType.OneTime), Dx: 286, Dy: 110, FontSize: 22, Position: types.BottomLeft, FontName: "THSarabunNew-Bold"},
+		{Text: tick(payload.WithholdingType.Other), Dx: 397, Dy: 110, FontSize: 22, Position: types.BottomLeft, FontName: "THSarabunNew-Bold"},
+		{Text: payload.WithholdingType.OtherDetails, Dx: 470, Dy: 117, FontSize: 12, Position: types.BottomLeft},
 
 		// Certification (ลงชื่อ ผู้จ่ายเงิน และวันที่)
 		{Text: payload.Certification.DateOfIssuance, Dx: 370, Dy: 70, FontSize: 14, Position: types.BottomLeft}, // dateOfIssuance
