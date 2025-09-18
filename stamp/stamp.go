@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/base64"
 	"flag"
 	"fmt"
 	"log"
@@ -397,10 +398,26 @@ func addTextStamp(inputPDF, outputPDF, signature, logo string) error {
 
 	// then wrap to reader
 	// reader := base64.NewDecoder(base64.StdEncoding, b64)
+	// TODO: support
+	// 1. file on disk
+	// 2. url https://example.com/image.png
+	// 3. base64
+	// 4. bytes
 
-	// then parse to watermark ImageWatermarkForReader
-	// wm, err := api.ImageWatermarkForReader(file, "", true, 1)
-	wm, err := pdfcpu.ParseImageWatermarkDetails(signature, "", true, 1)
+	// demo base64 payload.Certificate.PayerSignatureImage
+	b64 := DemoPayload().Certification.PayerSignatureImage
+	// Remove data URL prefix if present
+	if strings.HasPrefix(b64, "data:") {
+		parts := strings.SplitN(b64, ",", 2)
+		if len(parts) == 2 {
+			b64 = parts[1]
+		}
+	}
+	// Create a reader from the base64 string
+	reader := base64.NewDecoder(base64.StdEncoding, strings.NewReader(b64))
+
+	// Create image watermark from reader
+	wm, err := api.ImageWatermarkForReader(reader, "", true, false, types.POINTS)
 	if err != nil {
 		return err
 	}
