@@ -180,7 +180,7 @@ func DemoPayload() Payload {
 		Certification: Certification{
 			PayerSignature:     "นายตัวอย่าง ใจดี",
 			JuristicPersonSeal: "[ตราประทับบริษัท]",
-			DateOfIssuance:     "99/09/2568",
+			DateOfIssuance:     "01/01/2568", // format dd/mm/yyyy or any other format just use separator / to separate day, month, year
 		},
 	}
 }

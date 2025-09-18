@@ -130,6 +130,19 @@ func tick(pnd bool) string {
 	return " "
 }
 
+func DateOfIssuance(date string) []TextStampConfig {
+	d := strings.Split(date, "/")
+	if len(d) != 3 {
+		return []TextStampConfig{}
+	}
+
+	return []TextStampConfig{
+		{Text: d[0], Dx: 350, Dy: 70, FontSize: 14, Position: types.BottomLeft},
+		{Text: d[1], Dx: 380, Dy: 70, FontSize: 14, Position: types.BottomLeft},
+		{Text: d[2], Dx: 430, Dy: 70, FontSize: 14, Position: types.BottomLeft},
+	}
+}
+
 // convert data from Payload to TextStampConfig
 func convertPayloadToTextStampConfig(payload Payload) []TextStampConfig {
 
@@ -261,13 +274,13 @@ func convertPayloadToTextStampConfig(payload Payload) []TextStampConfig {
 		{Text: tick(payload.WithholdingType.OneTime), Dx: 286, Dy: 110, FontSize: 22, Position: types.BottomLeft, FontName: "THSarabunNew-Bold"},
 		{Text: tick(payload.WithholdingType.Other), Dx: 397, Dy: 110, FontSize: 22, Position: types.BottomLeft, FontName: "THSarabunNew-Bold"},
 		{Text: payload.WithholdingType.OtherDetails, Dx: 470, Dy: 117, FontSize: 12, Position: types.BottomLeft},
-
-		// Certification (ลงชื่อ ผู้จ่ายเงิน และวันที่)
-		{Text: payload.Certification.DateOfIssuance, Dx: 370, Dy: 70, FontSize: 14, Position: types.BottomLeft}, // dateOfIssuance
 	}
 
 	textStamps = append(textStamps, payer...)
 	textStamps = append(textStamps, payee...)
+
+	// Certification (ลงชื่อ ผู้จ่ายเงิน และวันที่)
+	textStamps = append(textStamps, DateOfIssuance(payload.Certification.DateOfIssuance)...)
 
 	return textStamps
 }
