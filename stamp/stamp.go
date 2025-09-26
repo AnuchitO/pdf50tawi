@@ -412,7 +412,7 @@ func addTextStamp(inputPDF, outputPDF, signature, logo string) error {
 	reader := base64.NewDecoder(base64.StdEncoding, strings.NewReader(b64))
 
 	// Create image watermark from reader
-	wm, err := ImageWatermark(reader, types.BottomLeft, 360, 82, 0.08, 1, false)
+	wm, err := ImageWatermark(reader, types.BottomCenter, 105, 84, 0.08, 1, false)
 	if err != nil {
 		return err
 	}
