@@ -95,28 +95,31 @@ type Certification struct {
 }
 
 type Payload struct {
-	DocumentDetails DocumentDetails `json:"documentDetails"`
-	Payer           Payer           `json:"payer"`
-	Payee           Payee           `json:"payee"`
-	Income40_1      IncomeDetail    `json:"income40_1"`
-	Income40_2      IncomeDetail    `json:"income40_2"`
-	Income40_3      IncomeDetail    `json:"income40_3"`
-	Income40_4A     IncomeDetail    `json:"income40_4A"`
-	Income40_4B_1_1 IncomeDetail    `json:"income40_4B_1_1"`
-	Income40_4B_1_2 IncomeDetail    `json:"income40_4B_1_2"`
-	Income40_4B_1_3 IncomeDetail    `json:"income40_4B_1_3"`
-	Income40_4B_1_4 IncomeDetail    `json:"income40_4B_1_4"`
-	Income40_4B_2_1 IncomeDetail    `json:"income40_4B_2_1"`
-	Income40_4B_2_2 IncomeDetail    `json:"income40_4B_2_2"`
-	Income40_4B_2_3 IncomeDetail    `json:"income40_4B_2_3"`
-	Income40_4B_2_4 IncomeDetail    `json:"income40_4B_2_4"`
-	Income40_4B_2_5 IncomeDetail    `json:"income40_4B_2_5"`
-	Income40_5      IncomeDetail    `json:"income40_5"`
-	Income40_6      IncomeDetail    `json:"income40_6"`
-	Totals          Totals          `json:"totals"`
-	OtherPayments   OtherPayments   `json:"otherPayments"`
-	WithholdingType WithholdingType `json:"withholdingType"`
-	Certification   Certification   `json:"certification"`
+	DocumentDetails      DocumentDetails `json:"documentDetails"`
+	Payer                Payer           `json:"payer"`
+	Payee                Payee           `json:"payee"`
+	Income40_1           IncomeDetail    `json:"income40_1"`
+	Income40_2           IncomeDetail    `json:"income40_2"`
+	Income40_3           IncomeDetail    `json:"income40_3"`
+	Income40_4A          IncomeDetail    `json:"income40_4A"`
+	Income40_4B_1_1      IncomeDetail    `json:"income40_4B_1_1"`
+	Income40_4B_1_2      IncomeDetail    `json:"income40_4B_1_2"`
+	Income40_4B_1_3      IncomeDetail    `json:"income40_4B_1_3"`
+	Income40_4B_1_4_Rate string          `json:"income40_4B_1_4_rate"`
+	Income40_4B_1_4      IncomeDetail    `json:"income40_4B_1_4"`
+	Income40_4B_2_1      IncomeDetail    `json:"income40_4B_2_1"`
+	Income40_4B_2_2      IncomeDetail    `json:"income40_4B_2_2"`
+	Income40_4B_2_3      IncomeDetail    `json:"income40_4B_2_3"`
+	Income40_4B_2_4      IncomeDetail    `json:"income40_4B_2_4"`
+	Income40_4B_2_5_Note string          `json:"income40_4B_2_5_note"`
+	Income40_4B_2_5      IncomeDetail    `json:"income40_4B_2_5"`
+	Income40_5           IncomeDetail    `json:"income40_5"`
+	Income40_6_Note      string          `json:"income40_6_note"`
+	Income40_6           IncomeDetail    `json:"income40_6"`
+	Totals               Totals          `json:"totals"`
+	OtherPayments        OtherPayments   `json:"otherPayments"`
+	WithholdingType      WithholdingType `json:"withholdingType"`
+	Certification        Certification   `json:"certification"`
 }
 
 // demo payload
@@ -146,23 +149,26 @@ func DemoPayload() Payload {
 			Pnd_3a:         true,
 			Pnd_53:         true,
 		},
-		Income40_1:      IncomeDetail{DatePaid: "01/01/2568", AmountPaid: "401,010.01", TaxWithheld: "12,030.30"},
-		Income40_2:      IncomeDetail{DatePaid: "02/02/2568", AmountPaid: "402,020.02", TaxWithheld: "12,060.60"},
-		Income40_3:      IncomeDetail{DatePaid: "03/03/2568", AmountPaid: "403,030.03", TaxWithheld: "12,090.90"},
-		Income40_4A:     IncomeDetail{DatePaid: "04/04/2568", AmountPaid: "404,040.04", TaxWithheld: "12,121.20"},
-		Income40_4B_1_1: IncomeDetail{DatePaid: "11/04/2568", AmountPaid: "404,101.05", TaxWithheld: "12,123.03"},
-		Income40_4B_1_2: IncomeDetail{DatePaid: "12/04/2568", AmountPaid: "404,102.06", TaxWithheld: "12,123.06"},
-		Income40_4B_1_3: IncomeDetail{DatePaid: "13/04/2568", AmountPaid: "404,103.07", TaxWithheld: "12,123.09"},
-		Income40_4B_1_4: IncomeDetail{DatePaid: "14/04/2568", AmountPaid: "404,104.08", TaxWithheld: "12,123.12"},
+		Income40_1:           IncomeDetail{DatePaid: "01/01/2568", AmountPaid: "401,010.01", TaxWithheld: "12,030.30"},
+		Income40_2:           IncomeDetail{DatePaid: "02/02/2568", AmountPaid: "402,020.02", TaxWithheld: "12,060.60"},
+		Income40_3:           IncomeDetail{DatePaid: "03/03/2568", AmountPaid: "403,030.03", TaxWithheld: "12,090.90"},
+		Income40_4A:          IncomeDetail{DatePaid: "04/04/2568", AmountPaid: "404,040.04", TaxWithheld: "12,121.20"},
+		Income40_4B_1_1:      IncomeDetail{DatePaid: "11/04/2568", AmountPaid: "404,101.05", TaxWithheld: "12,123.03"},
+		Income40_4B_1_2:      IncomeDetail{DatePaid: "12/04/2568", AmountPaid: "404,102.06", TaxWithheld: "12,123.06"},
+		Income40_4B_1_3:      IncomeDetail{DatePaid: "13/04/2568", AmountPaid: "404,103.07", TaxWithheld: "12,123.09"},
+		Income40_4B_1_4_Rate: "ร้อยละ 10",
+		Income40_4B_1_4:      IncomeDetail{DatePaid: "14/04/2568", AmountPaid: "404,104.08", TaxWithheld: "12,123.12"},
 
-		Income40_4B_2_1: IncomeDetail{DatePaid: "21/04/2568", AmountPaid: "404,201.09", TaxWithheld: "12,126.03"},
-		Income40_4B_2_2: IncomeDetail{DatePaid: "22/04/2568", AmountPaid: "404,202.10", TaxWithheld: "12,126.06"},
-		Income40_4B_2_3: IncomeDetail{DatePaid: "23/04/2568", AmountPaid: "404,203.11", TaxWithheld: "12,126.09"},
-		Income40_4B_2_4: IncomeDetail{DatePaid: "24/04/2568", AmountPaid: "404,204.12", TaxWithheld: "12,126.12"},
-		Income40_4B_2_5: IncomeDetail{DatePaid: "25/04/2568", AmountPaid: "404,205.13", TaxWithheld: "12,126.15"},
+		Income40_4B_2_1:      IncomeDetail{DatePaid: "21/04/2568", AmountPaid: "404,201.09", TaxWithheld: "12,126.03"},
+		Income40_4B_2_2:      IncomeDetail{DatePaid: "22/04/2568", AmountPaid: "404,202.10", TaxWithheld: "12,126.06"},
+		Income40_4B_2_3:      IncomeDetail{DatePaid: "23/04/2568", AmountPaid: "404,203.11", TaxWithheld: "12,126.09"},
+		Income40_4B_2_4:      IncomeDetail{DatePaid: "24/04/2568", AmountPaid: "404,204.12", TaxWithheld: "12,126.12"},
+		Income40_4B_2_5_Note: "ระบุ ใดๆๆๆๆๆ ",
+		Income40_4B_2_5:      IncomeDetail{DatePaid: "25/04/2568", AmountPaid: "404,205.13", TaxWithheld: "12,126.15"},
 
-		Income40_5: IncomeDetail{DatePaid: "05/05/2568", AmountPaid: "500,555.55", TaxWithheld: "15,555.55"},
-		Income40_6: IncomeDetail{DatePaid: "06/06/2568", AmountPaid: "600,666.66", TaxWithheld: "16,666.66"},
+		Income40_5:      IncomeDetail{DatePaid: "05/05/2568", AmountPaid: "500,555.55", TaxWithheld: "15,555.55"},
+		Income40_6_Note: "อื่นๆ (อื่นๆ) อื่นๆ อื่นๆ อื่นๆ",
+		Income40_6:      IncomeDetail{DatePaid: "06/06/2568", AmountPaid: "600,666.66", TaxWithheld: "16,666.66"},
 		Totals: Totals{
 			TotalAmountPaid:         "5,847,066.90",
 			TotalTaxWithheld:        "175,411.22",
