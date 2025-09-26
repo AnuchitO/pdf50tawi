@@ -53,6 +53,11 @@ func alignLeft() *types.HAlignment {
 	return &a
 }
 
+func alignCenter() *types.HAlignment {
+	a := types.AlignCenter
+	return &a
+}
+
 // applyTextWatermark applies a text watermark with the given configuration
 func applyTextWatermark(pdfCtx *model.Context, config TextStampConfig) error {
 	wm, err := pdfcpu.ParseTextWatermarkDetails(config.Text, "", true, 1)
@@ -75,7 +80,6 @@ func applyTextWatermark(pdfCtx *model.Context, config TextStampConfig) error {
 	wm.FontName = font
 	wm.FontSize = config.FontSize
 	wm.OnTop = true
-	// wm.HAlign = alignLeft()
 	wm.Pos = config.Position
 
 	return api.WatermarkContext(pdfCtx, nil, wm)
@@ -139,9 +143,9 @@ func DateOfIssuance(date string) []TextStampConfig {
 	}
 
 	return []TextStampConfig{
-		{Text: d[0], Dx: 350, Dy: 70, FontSize: 14, Position: types.BottomLeft},
-		{Text: d[1], Dx: 380, Dy: 70, FontSize: 14, Position: types.BottomLeft},
-		{Text: d[2], Dx: 430, Dy: 70, FontSize: 14, Position: types.BottomLeft},
+		{Text: d[0], Dx: 52, Dy: 70, FontSize: 14, Position: types.BottomCenter},
+		{Text: d[1], Dx: 99, Dy: 70, FontSize: 14, Position: types.BottomCenter},
+		{Text: d[2], Dx: 155, Dy: 70, FontSize: 14, Position: types.BottomCenter},
 	}
 }
 
