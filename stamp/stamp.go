@@ -15,6 +15,7 @@ import (
 	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu/color"
 	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu/model"
 	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu/types"
+	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu/validate"
 )
 
 func main() {
@@ -30,8 +31,45 @@ func main() {
 		log.Fatalf("Error installing fonts: %v", err)
 	}
 
+	_ = *inputPDF
+	_ = *outputPDF
+	_ = *signature
+	_ = *logo
 	// Add text stamp
-	if err := addTextStamp(*inputPDF, *outputPDF, *signature, *logo); err != nil {
+	// if err := addTextStamp(*inputPDF, *outputPDF, *signature, *logo); err != nil {
+	// 	log.Fatalf("Error adding text stamp: %v", err)
+	// }
+
+	// call NewAddTextStamp with new function
+	// tax50tawi template load file "tax50tawi.pdf" as io.Reader
+	tax50tawiReader, err := os.Open("tax50tawi.pdf")
+	if err != nil {
+		log.Fatalf("Error opening tax50tawi.pdf: %v", err)
+	}
+	defer tax50tawiReader.Close()
+
+	// create output file "tax50tawi-stamped.pdf" as io.Writer
+	outputFile, err := os.Create(*outputPDF)
+	if err != nil {
+		log.Fatalf("Error creating output file: %v", err)
+	}
+	defer outputFile.Close()
+
+	// load signature image as io.Reader
+	signatureReader, err := os.Open(*signature)
+	if err != nil {
+		log.Fatalf("Error opening signature image: %v", err)
+	}
+	defer signatureReader.Close()
+
+	// load logo image as io.Reader
+	logoReader, err := os.Open(*logo)
+	if err != nil {
+		log.Fatalf("Error opening logo image: %v", err)
+	}
+	defer logoReader.Close()
+
+	if err := NewStamp(tax50tawiReader, outputFile, signatureReader, logoReader, DemoPayload()); err != nil {
 		log.Fatalf("Error adding text stamp: %v", err)
 	}
 
@@ -131,8 +169,8 @@ func tick(pnd bool) string {
 // convert data from Payload to TextStampConfig
 func convertPayloadToTextStampConfig(payload Payload) []TextStampConfig {
 
+	// Payer Information (ผู้จ่ายเงิน)
 	payer := []TextStampConfig{
-		// Payer Information (ผู้จ่ายเงิน)
 		{Text: payload.Payer.Name, Dx: 58, Dy: -98, FontSize: 14, Position: types.TopLeft},
 		{Text: payload.Payer.Address, Dx: 62, Dy: -124, FontSize: 12, Position: types.TopLeft},
 	}
@@ -140,11 +178,13 @@ func convertPayloadToTextStampConfig(payload Payload) []TextStampConfig {
 	payer = append(payer, positionTaxID10Digits(payload.Payer.TaxID10Digit, -98, 16)...)
 
 	// Payee Information (ผู้ถูกหักภาษี ณ ที่จ่าย)
-	payee := append([]TextStampConfig{}, positionTaxID13Digits(payload.Payee.TaxID, -150, 16)...)
-	payee = append(payee, positionTaxID10Digits(payload.Payee.TaxID10Digit, -169, 16)...)
-	payee = append(payee, []TextStampConfig{
+	payee := []TextStampConfig{
 		{Text: payload.Payee.Name, Dx: 58, Dy: -170, FontSize: 14, Position: types.TopLeft},
 		{Text: payload.Payee.Address, Dx: 62, Dy: -199, FontSize: 12, Position: types.TopLeft},
+	}
+	payee = append(payee, positionTaxID13Digits(payload.Payee.TaxID, -150, 16)...)
+	payee = append(payee, positionTaxID10Digits(payload.Payee.TaxID10Digit, -169, 16)...)
+	payee = append(payee, []TextStampConfig{
 		// Tax Filing Reference (ลำดับที่)
 		{Text: payload.Payee.SequenceNumber, Dx: -190, Dy: -225, FontSize: 14, Position: types.TopCenter},
 
@@ -269,6 +309,56 @@ func convertPayloadToTextStampConfig(payload Payload) []TextStampConfig {
 	textStamps = append(textStamps, payee...)
 
 	return textStamps
+}
+
+func ReadContext(inFile io.ReadSeeker) (*model.Context, error) {
+	ctx, err := api.ReadContext(inFile, model.NewDefaultConfiguration())
+	if err != nil {
+		return nil, err
+	}
+
+	if ctx.Conf.Version != model.VersionStr {
+		model.CheckConfigVersion(ctx.Conf.Version)
+	}
+
+	return ctx, validate.XRefTable(ctx)
+}
+
+func NewStamp(inputPDF io.ReadSeeker, outputPDF io.Writer, signature io.Reader, logo io.Reader, payload Payload) error {
+	textStamps := convertPayloadToTextStampConfig(payload)
+
+	pdfCtx, err := ReadContext(inputPDF)
+	if err != nil {
+		return err
+	}
+
+	// Apply all text stamps
+	for _, stamp := range textStamps {
+		if err := applyTextWatermark(pdfCtx, stamp); err != nil {
+			return err
+		}
+	}
+
+	// Apply image stamps
+	wm, err := ImageWatermark(signature, types.BottomCenter, 105, 84, 0.08, 1, false)
+	if err != nil {
+		return err
+	}
+
+	if err := api.WatermarkContext(pdfCtx, nil, wm); err != nil {
+		return err
+	}
+
+	wmLogo, err := ImageWatermark(logo, types.BottomLeft, 511, 64, 0.08, 1, false)
+	if err != nil {
+		return err
+	}
+
+	if err := api.WatermarkContext(pdfCtx, nil, wmLogo); err != nil {
+		return err
+	}
+
+	return api.WriteContext(pdfCtx, outputPDF)
 }
 
 func addTextStamp(inputPDF, outputPDF, signature, logo string) error {
