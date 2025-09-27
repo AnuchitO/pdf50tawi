@@ -146,7 +146,7 @@ func DemoPayload() Payload {
 			TaxID10Digit:   "1234567890",
 			Name:           "นางสาวสมชาย นามสกุลยาวมากไหมนะก็ไม่รู้เหมือนกัน",
 			Address:        "555 ต.ทุ่งนา  อ.ทุ่งนา  จ.ชลบุรี  12345",
-			SequenceNumber: "001",
+			SequenceNumber: "321",
 			Pnd_1a:         true,
 			Pnd_1aSpecial:  true,
 			Pnd_2:          true,

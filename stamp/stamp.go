@@ -154,7 +154,7 @@ func convertPayloadToTextStampConfig(payload Payload) []TextStampConfig {
 		{Text: payload.Payee.Name, Dx: 58, Dy: -170, FontSize: 14, Position: types.TopLeft},    // payee name
 		{Text: payload.Payee.Address, Dx: 62, Dy: -199, FontSize: 12, Position: types.TopLeft}, // payee address
 		// Tax Filing Reference (ลำดับที่)
-		{Text: payload.Payee.SequenceNumber, Dx: 100, Dy: -225, FontSize: 14, Position: types.TopLeft}, // sequenceNumber
+		{Text: payload.Payee.SequenceNumber, Dx: -190, Dy: -225, FontSize: 14, Position: types.TopCenter}, // sequenceNumber
 
 		// TODO: fix "✔" character
 		{Text: tick(payload.Payee.Pnd_1a), Dy: -222, Dx: 213, FontSize: 22, Position: types.TopLeft, FontName: "THSarabunNew-Bold"},
