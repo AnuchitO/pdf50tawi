@@ -86,41 +86,33 @@ func applyTextWatermark(pdfCtx *model.Context, config TextStampConfig) error {
 }
 
 // positionTaxID13Digits creates individual text stamps for each digit of a tax ID
-func positionTaxID13Digits(taxID string, startX, y float64, fontSize int) []TextStampConfig {
-	var stamps []TextStampConfig
-	digits := strings.ReplaceAll(taxID, " ", "") // Remove spaces
+func positionTaxID13Digits(taxID string, dy float64, fontSize int) []TextStampConfig {
+	digits := strings.ReplaceAll(taxID, " ", "")
 
-	// X positions for 13-digit tax ID (with spacing for readability)
+	// X positions for 13-digit tax ID (with spacing to align position on each box form)
 	xPositions := []float64{378, 396, 408, 420, 432, 450, 463, 474, 486, 498, 517, 529, 548}
 
-	for i, digit := range digits {
-		if i < len(xPositions) {
-			stamps = append(stamps, TextStampConfig{
-				Text:     string(digit),
-				Dx:       xPositions[i],
-				Dy:       y,
-				FontSize: fontSize,
-				Position: types.TopLeft,
-			})
-		}
-	}
-	return stamps
+	return position(digits, fontSize, dy, xPositions)
 }
 
 // positionTaxID10Digits creates individual text stamps for each digit of a tax ID
-func positionTaxID10Digits(taxID string, startX, y float64, fontSize int) []TextStampConfig {
-	var stamps []TextStampConfig
-	digits := strings.ReplaceAll(taxID, " ", "") // Remove spaces
+func positionTaxID10Digits(taxID string, dy float64, fontSize int) []TextStampConfig {
+	digits := strings.ReplaceAll(taxID, " ", "")
 
-	// X positions for 10-digit tax ID (with spacing for readability)
+	// X positions for 10-digit tax ID (with spacing to align position on each box form)
 	xPositions := []float64{422, 440, 452, 464, 476, 494, 506, 518, 530, 548}
 
+	return position(digits, fontSize, dy, xPositions)
+}
+
+func position(digits string, fontSize int, dy float64, xPositions []float64) []TextStampConfig {
+	var stamps []TextStampConfig
 	for i, digit := range digits {
 		if i < len(xPositions) {
 			stamps = append(stamps, TextStampConfig{
 				Text:     string(digit),
 				Dx:       xPositions[i],
-				Dy:       y,
+				Dy:       dy,
 				FontSize: fontSize,
 				Position: types.TopLeft,
 			})
@@ -144,12 +136,12 @@ func convertPayloadToTextStampConfig(payload Payload) []TextStampConfig {
 		{Text: payload.Payer.Name, Dx: 58, Dy: -98, FontSize: 14, Position: types.TopLeft},
 		{Text: payload.Payer.Address, Dx: 62, Dy: -124, FontSize: 12, Position: types.TopLeft},
 	}
-	payer = append(payer, positionTaxID13Digits(payload.Payer.TaxID, 378, -81, 16)...)
-	payer = append(payer, positionTaxID10Digits(payload.Payer.TaxID10Digit, 422, -98, 16)...)
+	payer = append(payer, positionTaxID13Digits(payload.Payer.TaxID, -81, 16)...)
+	payer = append(payer, positionTaxID10Digits(payload.Payer.TaxID10Digit, -98, 16)...)
 
 	// Payee Information (ผู้ถูกหักภาษี ณ ที่จ่าย)
-	payee := append([]TextStampConfig{}, positionTaxID13Digits(payload.Payee.TaxID, 378, -150, 16)...)
-	payee = append(payee, positionTaxID10Digits(payload.Payee.TaxID10Digit, 422, -169, 16)...)
+	payee := append([]TextStampConfig{}, positionTaxID13Digits(payload.Payee.TaxID, -150, 16)...)
+	payee = append(payee, positionTaxID10Digits(payload.Payee.TaxID10Digit, -169, 16)...)
 	payee = append(payee, []TextStampConfig{
 		{Text: payload.Payee.Name, Dx: 58, Dy: -170, FontSize: 14, Position: types.TopLeft},
 		{Text: payload.Payee.Address, Dx: 62, Dy: -199, FontSize: 12, Position: types.TopLeft},
