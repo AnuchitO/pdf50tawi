@@ -73,7 +73,7 @@ func main() {
 	// 	log.Fatalf("Error adding text stamp: %v", err)
 	// }
 
-	if err := minor(tax50tawiReader, outputFile); err != nil {
+	if err := minor(tax50tawiReader, outputFile, DemoPayload(), signatureReader, logoReader); err != nil {
 		log.Fatalf("Error adding image stamp: %v", err)
 	}
 
@@ -360,6 +360,13 @@ func TextStampsFromPayload(payload Payload) []TextStampConfig {
 	return textStamps
 }
 
+func ImagesStamps(sign io.Reader, logo io.Reader) []ImageStampConfig {
+	return []ImageStampConfig{
+		{Reader: sign, Pos: types.BottomCenter, Dx: 105, Dy: 84, Scale: 0.08, Opacity: 1, OnTop: true},
+		{Reader: logo, Pos: types.BottomCenter, Dx: 230, Dy: 64, Scale: 0.08, Opacity: 1, OnTop: true},
+	}
+}
+
 func ReadContext(inFile io.ReadSeeker) (*model.Context, error) {
 	ctx, err := api.ReadContext(inFile, model.NewDefaultConfiguration())
 	if err != nil {
@@ -399,95 +406,17 @@ func WriteStampedPDF(ctx *model.Context, outputPDF io.Writer) error {
 	return api.WriteContext(ctx, outputPDF)
 }
 
-func minor(inputPDF io.ReadSeeker, outputPDF io.Writer) error {
-	ctx, err := ReadContext(inputPDF)
+// minor stamp: take signature and logo image as io.Reader
+func minor(inputPDF io.ReadSeeker, outputPDF io.Writer, taxInfo Payload, sign io.Reader, logo io.Reader) error {
+	images := ImagesStamps(sign, logo)
+	texts := TextStampsFromPayload(taxInfo)
+
+	ctx, err := BuildStampedContext(inputPDF, texts, images)
 	if err != nil {
 		return err
 	}
 
-	textStamps := TextStampsFromPayload(DemoPayload())
-
-	for _, stamp := range textStamps {
-		if err := applyTextWatermark(ctx, stamp); err != nil {
-			return err
-		}
-	}
-
-	// imageStamps := []ImageStampConfig{
-	// 	{
-	// 		Reader:  signature,
-	// 		Pos:     types.BottomCenter,
-	// 		Dx:      105,
-	// 		Dy:      84,
-	// 		Scale:   0.08,
-	// 		Opacity: 1,
-	// 		OnTop:   false,
-	// 	},
-	// 	{
-	// 		Reader:  logo,
-	// 		Pos:     types.BottomLeft,
-	// 		Dx:      511,
-	// 		Dy:      64,
-	// 		Scale:   0.08,
-	// 		Opacity: 1,
-	// 		OnTop:   false,
-	// 	},
-	// }
-
-	// for _, stamp := range imageStamps {
-	// 	if err := applyImageWatermark(ctx, stamp); err != nil {
-	// 		return
-	// 	}
-	// }
-
-	return api.WriteContext(ctx, outputPDF)
-}
-
-func NewStamp(inputPDF io.ReadSeeker, outputPDF io.Writer, signature io.Reader, logo io.Reader, payload Payload) error {
-	textStamps := TextStampsFromPayload(payload)
-
-	pdfCtx, err := ReadContext(inputPDF)
-	if err != nil {
-		return err
-	}
-
-	// Apply all text stamps
-	for _, stamp := range textStamps {
-		if err := applyTextWatermark(pdfCtx, stamp); err != nil {
-			return err
-		}
-	}
-
-	// Apply image stamps
-	imageStamps := ImageStampConfig{
-		Reader:  signature,
-		Pos:     types.BottomCenter,
-		Dx:      105,
-		Dy:      84,
-		Scale:   0.08,
-		Opacity: 1,
-		OnTop:   false,
-	}
-
-	if err := applyImageWatermark(pdfCtx, imageStamps); err != nil {
-		return err
-	}
-
-	wmLogo := ImageStampConfig{
-		Reader:  logo,
-		Pos:     types.BottomLeft,
-		Dx:      511,
-		Dy:      64,
-		Scale:   0.08,
-		Opacity: 1,
-		OnTop:   false,
-	}
-
-	if err := applyImageWatermark(pdfCtx, wmLogo); err != nil {
-		return err
-	}
-
-	return api.WriteContext(pdfCtx, outputPDF)
+	return WriteStampedPDF(ctx, outputPDF)
 }
 
 func addTextStamp(inputPDF, outputPDF, signature, logo string) error {
