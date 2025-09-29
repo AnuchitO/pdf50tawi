@@ -69,8 +69,12 @@ func main() {
 	}
 	defer logoReader.Close()
 
-	if err := NewStamp(tax50tawiReader, outputFile, signatureReader, logoReader, DemoPayload()); err != nil {
-		log.Fatalf("Error adding text stamp: %v", err)
+	// if err := NewStamp(tax50tawiReader, outputFile, signatureReader, logoReader, DemoPayload()); err != nil {
+	// 	log.Fatalf("Error adding text stamp: %v", err)
+	// }
+
+	if err := minor(tax50tawiReader, outputFile); err != nil {
+		log.Fatalf("Error adding image stamp: %v", err)
 	}
 
 	fmt.Println("Successfully processed PDF with Thai text stamp")
@@ -98,9 +102,17 @@ func alignCenter() *types.HAlignment {
 
 // applyTextWatermark applies a text watermark with the given configuration
 func applyTextWatermark(pdfCtx *model.Context, config TextStampConfig) error {
-	wm, err := pdfcpu.ParseTextWatermarkDetails(config.Text, "", true, 1)
+	wm, err := TextWatermark(config)
 	if err != nil {
 		return err
+	}
+	return api.WatermarkContext(pdfCtx, nil, wm)
+}
+
+func TextWatermark(config TextStampConfig) (*model.Watermark, error) {
+	wm, err := pdfcpu.ParseTextWatermarkDetails(config.Text, "", true, 1)
+	if err != nil {
+		return nil, err
 	}
 
 	font := "THSarabunNew"
@@ -120,7 +132,44 @@ func applyTextWatermark(pdfCtx *model.Context, config TextStampConfig) error {
 	wm.OnTop = true
 	wm.Pos = config.Position
 
+	return wm, nil
+}
+
+type ImageStampConfig struct {
+	Reader  io.Reader
+	Pos     types.Anchor
+	Dx      float64
+	Dy      float64
+	Scale   float64
+	Opacity float64
+	OnTop   bool
+}
+
+func applyImageWatermark(pdfCtx *model.Context, config ImageStampConfig) error {
+	wm, err := ImageWatermark(config)
+	if err != nil {
+		return err
+	}
+
 	return api.WatermarkContext(pdfCtx, nil, wm)
+}
+
+// Stamp Image take reader
+func ImageWatermark(config ImageStampConfig) (*model.Watermark, error) {
+	wm, err := api.ImageWatermarkForReader(config.Reader, "", true, false, types.POINTS)
+	if err != nil {
+		return nil, err
+	}
+	wm.Dy = config.Dy
+	wm.Dx = config.Dx
+	wm.Scale = config.Scale
+	wm.ScaleAbs = true
+	wm.Opacity = config.Opacity
+	wm.Diagonal = 0
+	wm.Rotation = 0
+	wm.OnTop = config.OnTop
+	wm.Pos = config.Pos
+	return wm, nil
 }
 
 // positionTaxID13Digits creates individual text stamps for each digit of a tax ID
@@ -167,7 +216,7 @@ func tick(pnd bool) string {
 }
 
 // convert data from Payload to TextStampConfig
-func convertPayloadToTextStampConfig(payload Payload) []TextStampConfig {
+func TextStampsFromPayload(payload Payload) []TextStampConfig {
 
 	// Payer Information (ผู้จ่ายเงิน)
 	payer := []TextStampConfig{
@@ -324,8 +373,78 @@ func ReadContext(inFile io.ReadSeeker) (*model.Context, error) {
 	return ctx, validate.XRefTable(ctx)
 }
 
+// BuildStampedContext // take inputPDF and  return *model.Context
+func BuildStampedContext(inputPDF io.ReadSeeker, textStamps []TextStampConfig, imageStamps []ImageStampConfig) (*model.Context, error) {
+	ctx, err := ReadContext(inputPDF)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, stamp := range textStamps {
+		if err := applyTextWatermark(ctx, stamp); err != nil {
+			return nil, err
+		}
+	}
+
+	for _, stamp := range imageStamps {
+		if err := applyImageWatermark(ctx, stamp); err != nil {
+			return nil, err
+		}
+	}
+
+	return ctx, nil
+}
+
+func WriteStampedPDF(ctx *model.Context, outputPDF io.Writer) error {
+	return api.WriteContext(ctx, outputPDF)
+}
+
+func minor(inputPDF io.ReadSeeker, outputPDF io.Writer) error {
+	ctx, err := ReadContext(inputPDF)
+	if err != nil {
+		return err
+	}
+
+	textStamps := TextStampsFromPayload(DemoPayload())
+
+	for _, stamp := range textStamps {
+		if err := applyTextWatermark(ctx, stamp); err != nil {
+			return err
+		}
+	}
+
+	// imageStamps := []ImageStampConfig{
+	// 	{
+	// 		Reader:  signature,
+	// 		Pos:     types.BottomCenter,
+	// 		Dx:      105,
+	// 		Dy:      84,
+	// 		Scale:   0.08,
+	// 		Opacity: 1,
+	// 		OnTop:   false,
+	// 	},
+	// 	{
+	// 		Reader:  logo,
+	// 		Pos:     types.BottomLeft,
+	// 		Dx:      511,
+	// 		Dy:      64,
+	// 		Scale:   0.08,
+	// 		Opacity: 1,
+	// 		OnTop:   false,
+	// 	},
+	// }
+
+	// for _, stamp := range imageStamps {
+	// 	if err := applyImageWatermark(ctx, stamp); err != nil {
+	// 		return
+	// 	}
+	// }
+
+	return api.WriteContext(ctx, outputPDF)
+}
+
 func NewStamp(inputPDF io.ReadSeeker, outputPDF io.Writer, signature io.Reader, logo io.Reader, payload Payload) error {
-	textStamps := convertPayloadToTextStampConfig(payload)
+	textStamps := TextStampsFromPayload(payload)
 
 	pdfCtx, err := ReadContext(inputPDF)
 	if err != nil {
@@ -340,21 +459,31 @@ func NewStamp(inputPDF io.ReadSeeker, outputPDF io.Writer, signature io.Reader, 
 	}
 
 	// Apply image stamps
-	wm, err := ImageWatermark(signature, types.BottomCenter, 105, 84, 0.08, 1, false)
-	if err != nil {
+	imageStamps := ImageStampConfig{
+		Reader:  signature,
+		Pos:     types.BottomCenter,
+		Dx:      105,
+		Dy:      84,
+		Scale:   0.08,
+		Opacity: 1,
+		OnTop:   false,
+	}
+
+	if err := applyImageWatermark(pdfCtx, imageStamps); err != nil {
 		return err
 	}
 
-	if err := api.WatermarkContext(pdfCtx, nil, wm); err != nil {
-		return err
+	wmLogo := ImageStampConfig{
+		Reader:  logo,
+		Pos:     types.BottomLeft,
+		Dx:      511,
+		Dy:      64,
+		Scale:   0.08,
+		Opacity: 1,
+		OnTop:   false,
 	}
 
-	wmLogo, err := ImageWatermark(logo, types.BottomLeft, 511, 64, 0.08, 1, false)
-	if err != nil {
-		return err
-	}
-
-	if err := api.WatermarkContext(pdfCtx, nil, wmLogo); err != nil {
+	if err := applyImageWatermark(pdfCtx, wmLogo); err != nil {
 		return err
 	}
 
@@ -373,7 +502,7 @@ func addTextStamp(inputPDF, outputPDF, signature, logo string) error {
 		return err
 	}
 
-	textStamps := convertPayloadToTextStampConfig(DemoPayload())
+	textStamps := TextStampsFromPayload(DemoPayload())
 
 	// Apply all text stamps
 	for _, stamp := range textStamps {
@@ -413,7 +542,7 @@ func addTextStamp(inputPDF, outputPDF, signature, logo string) error {
 	reader := base64.NewDecoder(base64.StdEncoding, strings.NewReader(b64))
 
 	// Create image watermark from reader
-	wm, err := ImageWatermark(reader, types.BottomCenter, 105, 84, 0.08, 1, false)
+	wm, err := ImageWatermarkX(reader, types.BottomCenter, 105, 84, 0.08, 1, false)
 	if err != nil {
 		return err
 	}
@@ -451,8 +580,7 @@ func addTextStamp(inputPDF, outputPDF, signature, logo string) error {
 // [ ] stamp image with base64
 // [ ] copy- original and copy
 
-// Stamp Image take reader
-func ImageWatermark(reader io.Reader, pos types.Anchor, dx, dy float64, scale float64, opacity float64, onTop bool) (*model.Watermark, error) {
+func ImageWatermarkX(reader io.Reader, pos types.Anchor, dx, dy float64, scale float64, opacity float64, onTop bool) (*model.Watermark, error) {
 	wm, err := api.ImageWatermarkForReader(reader, "", true, false, types.POINTS)
 	if err != nil {
 		return nil, err
@@ -466,5 +594,6 @@ func ImageWatermark(reader io.Reader, pos types.Anchor, dx, dy float64, scale fl
 	wm.Rotation = 0
 	wm.OnTop = onTop
 	wm.Pos = pos
+
 	return wm, nil
 }
