@@ -100,7 +100,7 @@ type Certification struct {
 	DateOfIssuance                   DateOfIssuance `json:"dateOfIssuance"`
 }
 
-type Payload struct {
+type TaxInfo struct {
 	DocumentDetails      DocumentDetails `json:"documentDetails"`
 	Payer                Payer           `json:"payer"`
 	Payee                Payee           `json:"payee"`
@@ -128,9 +128,9 @@ type Payload struct {
 	Certification        Certification   `json:"certification"`
 }
 
-// demo payload
-func DemoPayload() Payload {
-	return Payload{
+// demo tax info
+func DemoTaxInfo() TaxInfo {
+	return TaxInfo{
 		DocumentDetails: DocumentDetails{
 			BookNumber:     "001",
 			DocumentNumber: "2568-001",
