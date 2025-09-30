@@ -73,7 +73,7 @@ func main() {
 	// 	log.Fatalf("Error adding text stamp: %v", err)
 	// }
 
-	if err := minor(tax50tawiReader, outputFile, DemoTaxInfo(), signatureReader, logoReader); err != nil {
+	if err := IssueWHTCertificatePDF(tax50tawiReader, outputFile, DemoTaxInfo(), signatureReader, logoReader); err != nil {
 		log.Fatalf("Error adding image stamp: %v", err)
 	}
 
@@ -406,8 +406,8 @@ func WriteStampedPDF(ctx *model.Context, outputPDF io.Writer) error {
 	return api.WriteContext(ctx, outputPDF)
 }
 
-// minor stamp: take signature and logo image as io.Reader
-func minor(inputPDF io.ReadSeeker, outputPDF io.Writer, taxInfo TaxInfo, sign io.Reader, logo io.Reader) error {
+// IssueWHTCertificatePDF stamp: take signature and logo image as io.Reader
+func IssueWHTCertificatePDF(inputPDF io.ReadSeeker, outputPDF io.Writer, taxInfo TaxInfo, sign io.Reader, logo io.Reader) error {
 	images := ImagesStamps(sign, logo)
 	texts := TextStampsFromTaxInfo(taxInfo)
 
