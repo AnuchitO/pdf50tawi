@@ -22,16 +22,6 @@ type TextStmap struct {
 	Position types.Anchor
 }
 
-func alignLeft() *types.HAlignment {
-	a := types.AlignRight
-	return &a
-}
-
-func alignCenter() *types.HAlignment {
-	a := types.AlignCenter
-	return &a
-}
-
 // applyTextWatermark applies a text watermark with the given configuration
 func applyTextWatermark(pdfCtx *model.Context, config TextStmap) error {
 	wm, err := TextWatermark(config)
