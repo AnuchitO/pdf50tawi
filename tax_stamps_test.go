@@ -110,7 +110,7 @@ func TestTickAndCheckmarkStamp(t *testing.T) {
 	if tick(false) != " " {
 		t.Fatalf("tick(false) unexpected")
 	}
-	c := checkmarkStamp(true, 1.5, -2.5)
+	c := checkmark(true, 1.5, -2.5)
 	if c.Text != string(rune(52)) || c.FontName != "ZapfDingbats" || c.FontSize != 10 || c.Dx != 1.5 || c.Dy != -2.5 || c.Position != types.TopLeft {
 		t.Fatalf("checkmark stamp mismatch: %+v", c)
 	}

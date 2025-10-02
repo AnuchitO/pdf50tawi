@@ -137,7 +137,7 @@ func tick(pnd bool) string {
 	return " "
 }
 
-func checkmarkStamp(isSet bool, dx float64, dy float64) TextStmap {
+func checkmark(isSet bool, dx float64, dy float64) TextStmap {
 	return TextStmap{
 		Text:     tick(isSet),
 		Dx:       dx,
@@ -170,13 +170,13 @@ func TextStampsFromTaxInfo(tax TaxInfo) []TextStmap {
 		// Tax Filing Reference (ลำดับที่)
 		{Text: tax.Payee.SequenceNumber, Dx: -190, Dy: -225, FontSize: 14, Position: types.TopCenter},
 
-		checkmarkStamp(tax.Payee.Pnd_1a, 211.5, -230),
-		checkmarkStamp(tax.Payee.Pnd_1aSpecial, 289, -230),
-		checkmarkStamp(tax.Payee.Pnd_2, 397, -230),
-		checkmarkStamp(tax.Payee.Pnd_2a, 211.5, -248),
-		checkmarkStamp(tax.Payee.Pnd_3, 474, -230),
-		checkmarkStamp(tax.Payee.Pnd_3a, 289, -248),
-		checkmarkStamp(tax.Payee.Pnd_53, 397, -248),
+		checkmark(tax.Payee.Pnd_1a, 211.5, -230),
+		checkmark(tax.Payee.Pnd_1aSpecial, 289, -230),
+		checkmark(tax.Payee.Pnd_2, 397, -230),
+		checkmark(tax.Payee.Pnd_2a, 211.5, -248),
+		checkmark(tax.Payee.Pnd_3, 474, -230),
+		checkmark(tax.Payee.Pnd_3a, 289, -248),
+		checkmark(tax.Payee.Pnd_53, 397, -248),
 	}...)
 
 	// Define text stamps configuration with demo data - adjusted for Form 50 ทวิ layout
@@ -275,10 +275,10 @@ func TextStampsFromTaxInfo(tax TaxInfo) []TextStmap {
 		{Text: tax.OtherPayments.ProvidentFund, Dx: -54, Dy: 139, FontSize: 12, Position: types.BottomRight},
 
 		// Withholding Type
-		checkmarkStamp(tax.WithholdingType.WithholdingTax, 85, -712),
-		checkmarkStamp(tax.WithholdingType.Forever, 178, -712),
-		checkmarkStamp(tax.WithholdingType.OneTime, 285.5, -712),
-		checkmarkStamp(tax.WithholdingType.Other, 396, -712),
+		checkmark(tax.WithholdingType.WithholdingTax, 85, -712),
+		checkmark(tax.WithholdingType.Forever, 178, -712),
+		checkmark(tax.WithholdingType.OneTime, 285.5, -712),
+		checkmark(tax.WithholdingType.Other, 396, -712),
 		{Text: tax.WithholdingType.OtherDetails, Dx: 470, Dy: 117, FontSize: 12, Position: types.BottomLeft},
 
 		// Certification (ลงชื่อ ผู้จ่ายเงิน และวันที่)
