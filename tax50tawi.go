@@ -6,11 +6,11 @@ import (
 	"io"
 )
 
-//go:embed file/tax50tawi.pdf
-var tax50tawiPDF embed.FS
+//go:embed form
+var form embed.FS
 
 func Tax50tawiPDFTemplate() (io.ReadSeeker, error) {
-	f, err := tax50tawiPDF.ReadFile("file/tax50tawi.pdf")
+	f, err := form.ReadFile("form/tax50tawiTemplate.pdf")
 	if err != nil {
 		return nil, err
 	}
