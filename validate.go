@@ -18,11 +18,13 @@ func ValidateTaxInfo(t TaxInfo) error {
 	var ve ValidationError
 
 	// Payer
-	validateParty(&ve, "payer", t.Payer.Name, t.Payer.TaxID, t.Payer.TaxID10Digit)
+	ve.validateParty("payer", t.Payer.Name, t.Payer.TaxID, t.Payer.TaxID10Digit)
 	// Payee
-	validateParty(&ve, "payee", t.Payee.Name, t.Payee.TaxID, t.Payee.TaxID10Digit)
+	ve.validateParty("payee", t.Payee.Name, t.Payee.TaxID, t.Payee.TaxID10Digit)
 	// Payee PND validation
-	validatePayeePND(&ve, t.Payee)
+	ve.validatePayeePND(t.Payee)
+	// Withholding type validation
+	ve.validateWithholdingType(t.WithholdingType)
 
 	if ve.HasErrors() {
 		return &ve
@@ -30,13 +32,19 @@ func ValidateTaxInfo(t TaxInfo) error {
 	return nil
 }
 
-func validatePayeePND(ve *ValidationError, p Payee) {
+func (ve *ValidationError) validatePayeePND(p Payee) {
 	if !p.Pnd_1a && !p.Pnd_1aSpecial && !p.Pnd_2 && !p.Pnd_3 && !p.Pnd_2a && !p.Pnd_3a && !p.Pnd_53 {
-		ve.Add("ผู้ถูกหักภาษี: ต้องเลือกประเภทเงินได้อย่างน้อยหนึ่งประเภท ภ.ง.ด. 1ก (pnd_1a), ภ.ง.ด. 1ก พิเศษ (pnd_1aSpecial), ภ.ง.ด. 2 (pnd_2), ภ.ง.ด. 3 (pnd_3), ภ.ง.ด. 2ก (pnd_2a), ภ.ง.ด. 3ก (pnd_3a) หรือ ภ.ง.ด. 53 (pnd_53)")
+		ve.Add("ผู้ถูกหักภาษี: ต้องเลือกประเภทเงินได้อย่างน้อยหนึ่งประเภท ภ.ง.ด. 1ก: pnd_1a, ภ.ง.ด. 1ก พิเศษ: pnd_1aSpecial, ภ.ง.ด. 2: pnd_2, ภ.ง.ด. 3: pnd_3, ภ.ง.ด. 2ก: pnd_2a, ภ.ง.ด. 3ก: pnd_3a หรือ ภ.ง.ด. 53: pnd_53")
 	}
 }
 
-func validateParty(ve *ValidationError, prefix, name, tax13, tax10 string) {
+func (ve *ValidationError) validateWithholdingType(w WithholdingType) {
+	if !w.WithholdingTax && !w.Forever && !w.OneTime && !w.Other {
+		ve.Add("ต้องเลือกประเภทหนังสือรับรองอย่างน้อยหนึ่งประเภท (หัก ณ ที่จ่าย: withholdingTax, ออกให้ตลอดไป: forever, ออกให้ครั้งเดียว: oneTime หรือ อื่น ๆ: other)")
+	}
+}
+
+func (ve *ValidationError) validateParty(prefix, name, tax13, tax10 string) {
 	if strings.TrimSpace(name) == "" {
 		ve.Add(fmt.Sprintf("%s.name is required", prefix))
 	}

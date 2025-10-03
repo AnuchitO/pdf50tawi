@@ -82,11 +82,11 @@ type OtherPayments struct {
 }
 
 type WithholdingType struct {
-	WithholdingTax bool   `json:"withholdingTax"`
-	Forever        bool   `json:"forever"`
-	OneTime        bool   `json:"oneTime"`
-	Other          bool   `json:"other"`
-	OtherDetails   string `json:"otherDetails"`
+	WithholdingTax bool   `json:"withholdingTax"` // หัก ณ ที่จ่าย
+	Forever        bool   `json:"forever"`        // ออกให้ตลอดไป
+	OneTime        bool   `json:"oneTime"`        // ออกให้ครั้งเดียว
+	Other          bool   `json:"other"`          // อื่น ๆ
+	OtherDetails   string `json:"otherDetails"`   // อื่น ๆ (ระบุ)
 }
 
 type DateOfIssuance struct {

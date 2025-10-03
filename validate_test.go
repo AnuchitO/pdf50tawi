@@ -144,14 +144,13 @@ func TestValidatePayeePND(t *testing.T) {
 		expectedErrorMsg string
 	}{
 		// Success cases - at least one PND field is true
-		{"Valid_Pnd1a", Payee{Pnd_1a: true}, ""},
-		{"Valid_Pnd1aSpecial", Payee{Pnd_1aSpecial: true}, ""},
-		{"Valid_Pnd2", Payee{Pnd_2: true}, ""},
-		{"Valid_Pnd3", Payee{Pnd_3: true}, ""},
-		{"Valid_Pnd2a", Payee{Pnd_2a: true}, ""},
-		{"Valid_Pnd3a", Payee{Pnd_3a: true}, ""},
-		{"Valid_Pnd53", Payee{Pnd_53: true}, ""},
-		{"Valid_MultiplePND", Payee{Pnd_1a: true, Pnd_2: true, Pnd_53: true}, ""},
+		{"Valid_ภ.ง.ด. 1ก", Payee{Pnd_1a: true}, ""},
+		{"Valid_ภ.ง.ด. 1ก พิเศษ", Payee{Pnd_1aSpecial: true}, ""},
+		{"Valid_ภ.ง.ด. 2", Payee{Pnd_2: true}, ""},
+		{"Valid_ภ.ง.ด. 3", Payee{Pnd_3: true}, ""},
+		{"Valid_ภ.ง.ด. 2ก", Payee{Pnd_2a: true}, ""},
+		{"Valid_ภ.ง.ด. 3ก", Payee{Pnd_3a: true}, ""},
+		{"Valid_ภ.ง.ด. 53", Payee{Pnd_53: true}, ""},
 
 		// Failure case - no PND fields set
 		{"Invalid_NoPND", Payee{}, "ผู้ถูกหักภาษี: ต้องเลือกประเภทเงินได้อย่างน้อยหนึ่งประเภท"},
@@ -163,7 +162,52 @@ func TestValidatePayeePND(t *testing.T) {
 			ve = ValidationError{}
 
 			// Test validatePayeePND directly
-			validatePayeePND(&ve, tc.payee)
+			ve.validatePayeePND(tc.payee)
+
+			if tc.expectedErrorMsg == "" {
+				// Expect no error
+				if ve.HasErrors() {
+					t.Fatalf("expected no error for %s, got %v", tc.name, ve.Error())
+				}
+			} else {
+				// Expect specific error
+				if !ve.HasErrors() {
+					t.Fatalf("expected error for %s, got no error", tc.name)
+				}
+				if !strings.Contains(ve.Error(), tc.expectedErrorMsg) {
+					t.Fatalf("expected error to contain %q, got %q", tc.expectedErrorMsg, ve.Error())
+				}
+			}
+		})
+	}
+}
+
+func TestValidateWithholdingType(t *testing.T) {
+	var ve ValidationError
+
+	testCases := []struct {
+		name             string
+		withholdingType  WithholdingType
+		expectedErrorMsg string
+	}{
+		// Success cases - at least one field is true
+		{"Valid_WithholdingTax", WithholdingType{WithholdingTax: true}, ""},
+		{"Valid_Forever", WithholdingType{Forever: true}, ""},
+		{"Valid_OneTime", WithholdingType{OneTime: true}, ""},
+		{"Valid_Other", WithholdingType{Other: true}, ""},
+		{"Valid_Multiple", WithholdingType{WithholdingTax: true, Forever: true}, ""},
+
+		// Failure case - no fields set
+		{"Invalid_NoneSelected", WithholdingType{}, "ต้องเลือกประเภทหนังสือรับรองอย่างน้อยหนึ่งประเภท"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			// Reset validation error for each test
+			ve = ValidationError{}
+
+			// Test validateWithholdingType directly
+			ve.validateWithholdingType(tc.withholdingType)
 
 			if tc.expectedErrorMsg == "" {
 				// Expect no error
