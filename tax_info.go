@@ -54,13 +54,13 @@ type Payee struct {
 	Name           string `json:"name"`
 	Address        string `json:"address"`
 	SequenceNumber string `json:"sequenceNumber"`
-	Pnd_1a         bool   `json:"pnd_1a"`
-	Pnd_1aSpecial  bool   `json:"pnd_1aSpecial"`
-	Pnd_2          bool   `json:"pnd_2"`
-	Pnd_3          bool   `json:"pnd_3"`
-	Pnd_2a         bool   `json:"pnd_2a"`
-	Pnd_3a         bool   `json:"pnd_3a"`
-	Pnd_53         bool   `json:"pnd_53"`
+	Pnd_1a         bool   `json:"pnd_1a"`        // ภ.ง.ด. 1ก
+	Pnd_1aSpecial  bool   `json:"pnd_1aSpecial"` // ภ.ง.ด. 1ก พิเศษ
+	Pnd_2          bool   `json:"pnd_2"`         // ภ.ง.ด. 2
+	Pnd_3          bool   `json:"pnd_3"`         // ภ.ง.ด. 3
+	Pnd_2a         bool   `json:"pnd_2a"`        // ภ.ง.ด. 2ก
+	Pnd_3a         bool   `json:"pnd_3a"`        // ภ.ง.ด. 3ก
+	Pnd_53         bool   `json:"pnd_53"`        // ภ.ง.ด. 53
 }
 
 type IncomeDetail struct {
