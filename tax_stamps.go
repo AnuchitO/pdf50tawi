@@ -58,13 +58,14 @@ func TextWatermark(stamp TextStamp) (*model.Watermark, error) {
 }
 
 type ImageStamp struct {
-	Reader  io.Reader
-	Pos     types.Anchor
-	Dx      float64
-	Dy      float64
-	Scale   float64
-	Opacity float64
-	OnTop   bool
+	Reader   io.Reader
+	Pos      types.Anchor
+	Dx       float64
+	Dy       float64
+	Scale    float64
+	Opacity  float64
+	Diagonal int
+	OnTop    bool
 }
 
 func applyImageWatermark(pdfCtx *model.Context, stamp ImageStamp) error {
@@ -87,11 +88,18 @@ func ImageWatermark(stamp ImageStamp) (*model.Watermark, error) {
 	wm.Scale = stamp.Scale
 	wm.ScaleAbs = true
 	wm.Opacity = stamp.Opacity
-	wm.Diagonal = 0
+	wm.Diagonal = stamp.Diagonal
 	wm.Rotation = 0
 	wm.OnTop = stamp.OnTop
 	wm.Pos = stamp.Pos
 	return wm, nil
+}
+
+func CertificateImageStamps(sign io.Reader, logo io.Reader) []ImageStamp {
+	return []ImageStamp{
+		{Reader: sign, Pos: types.BottomCenter, Dx: 105, Dy: 84, Scale: 0.08, Opacity: 1, OnTop: true},
+		{Reader: logo, Pos: types.Center, Dx: 230, Dy: -343, Scale: 0.08, Opacity: 1, OnTop: false, Diagonal: 1},
+	}
 }
 
 // positionTaxID13Digits creates individual text stamps for each digit of a tax ID
@@ -291,13 +299,6 @@ func TextStampsFromTaxInfo(tax TaxInfo) []TextStamp {
 	textStamps = append(textStamps, payee...)
 
 	return textStamps
-}
-
-func CertificateImageStamps(sign io.Reader, logo io.Reader) []ImageStamp {
-	return []ImageStamp{
-		{Reader: sign, Pos: types.BottomCenter, Dx: 105, Dy: 84, Scale: 0.08, Opacity: 1, OnTop: true},
-		{Reader: logo, Pos: types.BottomCenter, Dx: 230, Dy: 64, Scale: 0.08, Opacity: 1, OnTop: true},
-	}
 }
 
 func ReadContext(inFile io.ReadSeeker) (*model.Context, error) {
