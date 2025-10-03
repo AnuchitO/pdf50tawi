@@ -24,25 +24,6 @@ func TestValidateTaxInfo_OK(t *testing.T) {
 	}
 }
 
-func TestValidateTaxInfo_MultipleErrors(t *testing.T) {
-	// many missing/invalid to ensure aggregation
-	v := TaxInfo{}
-	err := ValidateTaxInfo(v)
-	if err == nil {
-		t.Fatalf("expected error")
-	}
-	msg := err.Error()
-	checks := []string{
-		"payer.name is required",
-		"payee.name is required",
-	}
-	for _, c := range checks {
-		if !strings.Contains(msg, c) {
-			t.Fatalf("expected error to contain %q, got %q", c, msg)
-		}
-	}
-}
-
 func TestValidateTaxID(t *testing.T) {
 	testCases := []struct {
 		name             string
@@ -224,5 +205,42 @@ func TestValidateWithholdingType(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+func TestValidateTaxInfo_AllErrors(t *testing.T) {
+	v := TaxInfo{
+		Payer: Payer{
+			TaxID:        "000",
+			TaxID10Digit: "000",
+			Name:         "",
+		},
+		Payee: Payee{
+			TaxID:        "000",
+			TaxID10Digit: "000",
+			Name:         "",
+		},
+		WithholdingType: WithholdingType{},
+	}
+
+	err := ValidateTaxInfo(v)
+	if err == nil {
+		t.Fatalf("expected multiple validation errors, got nil")
+	}
+
+	msg := err.Error()
+	expectedErrors := []string{
+		"payer.name is required",
+		"payee.name is required",
+		"payee.taxId must be 13 digits",
+		"payee.taxId10Digit must be 10 digits",
+		"ผู้ถูกหักภาษี: ต้องเลือกประเภทเงินได้อย่างน้อยหนึ่งประเภท",
+		"ต้องเลือกประเภทหนังสือรับรองอย่างน้อยหนึ่งประเภท",
+	}
+
+	for _, expected := range expectedErrors {
+		if !strings.Contains(msg, expected) {
+			t.Fatalf("expected error to contain %q, got %q", expected, msg)
+		}
 	}
 }
