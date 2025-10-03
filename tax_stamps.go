@@ -182,8 +182,8 @@ func TextStampsFromTaxInfo(tax TaxInfo) []TextStmap {
 	// Define text stamps configuration with demo data - adjusted for Form 50 ทวิ layout
 	textStamps := []TextStmap{
 		// Document Details (top right)
-		{Text: tax.DocumentDetails.BookNumber, Dx: 525, Dy: -48, FontSize: 14, Position: types.TopLeft},
-		{Text: tax.DocumentDetails.DocumentNumber, Dx: 525, Dy: -62, FontSize: 14, Position: types.TopLeft},
+		{Text: tax.DocumentDetails.BookNumber, Dx: 519, Dy: -48, FontSize: 14, Position: types.TopLeft},
+		{Text: tax.DocumentDetails.DocumentNumber, Dx: 519, Dy: -62, FontSize: 14, Position: types.TopLeft},
 
 		// Position: Bottom Right
 		// Income Details - Row 1 (เงินเดือน ค่าจาง)
