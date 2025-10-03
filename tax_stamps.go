@@ -12,8 +12,8 @@ import (
 	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu/validate"
 )
 
-// TextStmap holds configuration for a text watermark
-type TextStmap struct {
+// TextStamp holds configuration for a text watermark
+type TextStamp struct {
 	Text     string
 	Dx       float64
 	Dy       float64
@@ -23,36 +23,36 @@ type TextStmap struct {
 }
 
 // applyTextWatermark applies a text watermark with the given configuration
-func applyTextWatermark(pdfCtx *model.Context, config TextStmap) error {
-	wm, err := TextWatermark(config)
+func applyTextWatermark(pdfCtx *model.Context, stamp TextStamp) error {
+	wm, err := TextWatermark(stamp)
 	if err != nil {
 		return err
 	}
 	return api.WatermarkContext(pdfCtx, nil, wm)
 }
 
-func TextWatermark(config TextStmap) (*model.Watermark, error) {
-	wm, err := pdfcpu.ParseTextWatermarkDetails(config.Text, "", true, 1)
+func TextWatermark(stamp TextStamp) (*model.Watermark, error) {
+	wm, err := pdfcpu.ParseTextWatermarkDetails(stamp.Text, "", true, 1)
 	if err != nil {
 		return nil, err
 	}
 
 	font := "THSarabunNew"
-	if config.FontName != "" {
-		font = config.FontName
+	if stamp.FontName != "" {
+		font = stamp.FontName
 	}
 
 	wm.FillColor = color.Black
-	wm.Dy = config.Dy
-	wm.Dx = config.Dx
+	wm.Dy = stamp.Dy
+	wm.Dx = stamp.Dx
 	wm.Diagonal = 0
 	wm.Rotation = 0
 	wm.Scale = 1
 	wm.ScaleAbs = true
 	wm.FontName = font
-	wm.FontSize = config.FontSize
+	wm.FontSize = stamp.FontSize
 	wm.OnTop = true
-	wm.Pos = config.Position
+	wm.Pos = stamp.Position
 
 	return wm, nil
 }
@@ -67,8 +67,8 @@ type ImageStamp struct {
 	OnTop   bool
 }
 
-func applyImageWatermark(pdfCtx *model.Context, config ImageStamp) error {
-	wm, err := ImageWatermark(config)
+func applyImageWatermark(pdfCtx *model.Context, stamp ImageStamp) error {
+	wm, err := ImageWatermark(stamp)
 	if err != nil {
 		return err
 	}
@@ -77,25 +77,25 @@ func applyImageWatermark(pdfCtx *model.Context, config ImageStamp) error {
 }
 
 // Stamp Image take reader
-func ImageWatermark(config ImageStamp) (*model.Watermark, error) {
-	wm, err := api.ImageWatermarkForReader(config.Reader, "", true, false, types.POINTS)
+func ImageWatermark(stamp ImageStamp) (*model.Watermark, error) {
+	wm, err := api.ImageWatermarkForReader(stamp.Reader, "", true, false, types.POINTS)
 	if err != nil {
 		return nil, err
 	}
-	wm.Dy = config.Dy
-	wm.Dx = config.Dx
-	wm.Scale = config.Scale
+	wm.Dy = stamp.Dy
+	wm.Dx = stamp.Dx
+	wm.Scale = stamp.Scale
 	wm.ScaleAbs = true
-	wm.Opacity = config.Opacity
+	wm.Opacity = stamp.Opacity
 	wm.Diagonal = 0
 	wm.Rotation = 0
-	wm.OnTop = config.OnTop
-	wm.Pos = config.Pos
+	wm.OnTop = stamp.OnTop
+	wm.Pos = stamp.Pos
 	return wm, nil
 }
 
 // positionTaxID13Digits creates individual text stamps for each digit of a tax ID
-func positionTaxID13Digits(taxID string, dy float64, fontSize int) []TextStmap {
+func positionTaxID13Digits(taxID string, dy float64, fontSize int) []TextStamp {
 	digits := strings.ReplaceAll(taxID, " ", "")
 
 	// X positions for 13-digit tax ID (with spacing to align position on each box form)
@@ -105,7 +105,7 @@ func positionTaxID13Digits(taxID string, dy float64, fontSize int) []TextStmap {
 }
 
 // positionTaxID10Digits creates individual text stamps for each digit of a tax ID
-func positionTaxID10Digits(taxID string, dy float64, fontSize int) []TextStmap {
+func positionTaxID10Digits(taxID string, dy float64, fontSize int) []TextStamp {
 	digits := strings.ReplaceAll(taxID, " ", "")
 
 	// X positions for 10-digit tax ID (with spacing to align position on each box form)
@@ -114,11 +114,11 @@ func positionTaxID10Digits(taxID string, dy float64, fontSize int) []TextStmap {
 	return position(digits, fontSize, dy, xPositions)
 }
 
-func position(digits string, fontSize int, dy float64, xPositions []float64) []TextStmap {
-	var stamps []TextStmap
+func position(digits string, fontSize int, dy float64, xPositions []float64) []TextStamp {
+	var stamps []TextStamp
 	for i, digit := range digits {
 		if i < len(xPositions) {
-			stamps = append(stamps, TextStmap{
+			stamps = append(stamps, TextStamp{
 				Text:     string(digit),
 				Dx:       xPositions[i],
 				Dy:       dy,
@@ -137,8 +137,8 @@ func tick(pnd bool) string {
 	return " "
 }
 
-func checkmark(isSet bool, dx float64, dy float64) TextStmap {
-	return TextStmap{
+func checkmark(isSet bool, dx float64, dy float64) TextStamp {
+	return TextStamp{
 		Text:     tick(isSet),
 		Dx:       dx,
 		Dy:       dy,
@@ -149,10 +149,10 @@ func checkmark(isSet bool, dx float64, dy float64) TextStmap {
 }
 
 // convert data from TaxInfo to TextStampConfig
-func TextStampsFromTaxInfo(tax TaxInfo) []TextStmap {
+func TextStampsFromTaxInfo(tax TaxInfo) []TextStamp {
 
 	// Payer Information (ผู้จ่ายเงิน)
-	payer := []TextStmap{
+	payer := []TextStamp{
 		{Text: tax.Payer.Name, Dx: 58, Dy: -98, FontSize: 14, Position: types.TopLeft},
 		{Text: tax.Payer.Address, Dx: 62, Dy: -124, FontSize: 12, Position: types.TopLeft},
 	}
@@ -160,13 +160,13 @@ func TextStampsFromTaxInfo(tax TaxInfo) []TextStmap {
 	payer = append(payer, positionTaxID10Digits(tax.Payer.TaxID10Digit, -98, 16)...)
 
 	// Payee Information (ผู้ถูกหักภาษี ณ ที่จ่าย)
-	payee := []TextStmap{
+	payee := []TextStamp{
 		{Text: tax.Payee.Name, Dx: 58, Dy: -170, FontSize: 14, Position: types.TopLeft},
 		{Text: tax.Payee.Address, Dx: 62, Dy: -199, FontSize: 12, Position: types.TopLeft},
 	}
 	payee = append(payee, positionTaxID13Digits(tax.Payee.TaxID, -150, 16)...)
 	payee = append(payee, positionTaxID10Digits(tax.Payee.TaxID10Digit, -169, 16)...)
-	payee = append(payee, []TextStmap{
+	payee = append(payee, []TextStamp{
 		// Tax Filing Reference (ลำดับที่)
 		{Text: tax.Payee.SequenceNumber, Dx: -190, Dy: -225, FontSize: 14, Position: types.TopCenter},
 
@@ -180,7 +180,7 @@ func TextStampsFromTaxInfo(tax TaxInfo) []TextStmap {
 	}...)
 
 	// Define text stamps configuration with demo data - adjusted for Form 50 ทวิ layout
-	textStamps := []TextStmap{
+	textStamps := []TextStamp{
 		// Document Details (top right)
 		{Text: tax.DocumentDetails.BookNumber, Dx: 519, Dy: -48, FontSize: 14, Position: types.TopLeft},
 		{Text: tax.DocumentDetails.DocumentNumber, Dx: 519, Dy: -62, FontSize: 14, Position: types.TopLeft},
@@ -314,7 +314,7 @@ func ReadContext(inFile io.ReadSeeker) (*model.Context, error) {
 }
 
 // BuildStampedContext // take inputPDF and  return *model.Context
-func BuildStampedContext(inputPDF io.ReadSeeker, textStamps []TextStmap, imageStamps []ImageStamp) (*model.Context, error) {
+func BuildStampedContext(inputPDF io.ReadSeeker, textStamps []TextStamp, imageStamps []ImageStamp) (*model.Context, error) {
 	// Ensure fonts are installed before any watermarking occurs
 	if err := InstallFonts(); err != nil {
 		return nil, err

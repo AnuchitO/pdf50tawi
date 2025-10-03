@@ -37,19 +37,19 @@ func sampleTaxInfo() TaxInfo {
 		Income40_4B_1_1:      IncomeDetail{DatePaid: "01/05/2568", AmountPaid: "500.00", TaxWithheld: "50.00"},
 		Income40_4B_1_2:      IncomeDetail{DatePaid: "01/06/2568", AmountPaid: "600.00", TaxWithheld: "60.00"},
 		Income40_4B_1_3:      IncomeDetail{DatePaid: "01/07/2568", AmountPaid: "700.00", TaxWithheld: "70.00"},
-		Income40_4B_1_4_Rate: "7%",
+		Income40_4B_1_4_Rate: "ร้อยละ 7",
 		Income40_4B_1_4:      IncomeDetail{DatePaid: "01/08/2568", AmountPaid: "800.00", TaxWithheld: "80.00"},
 		Income40_4B_2_1:      IncomeDetail{DatePaid: "01/09/2568", AmountPaid: "900.00", TaxWithheld: "90.00"},
 		Income40_4B_2_2:      IncomeDetail{DatePaid: "01/10/2568", AmountPaid: "1000.00", TaxWithheld: "100.00"},
 		Income40_4B_2_3:      IncomeDetail{DatePaid: "01/11/2568", AmountPaid: "1100.00", TaxWithheld: "110.00"},
 		Income40_4B_2_4:      IncomeDetail{DatePaid: "01/12/2568", AmountPaid: "1200.00", TaxWithheld: "120.00"},
-		Income40_4B_2_5_Note: "Other note",
+		Income40_4B_2_5_Note: "ใส่หมายเหตุ",
 		Income40_4B_2_5:      IncomeDetail{DatePaid: "01/13/2568", AmountPaid: "1300.00", TaxWithheld: "130.00"},
 		Income5:              IncomeDetail{DatePaid: "01/14/2568", AmountPaid: "1400.00", TaxWithheld: "140.00"},
 		Income6:              IncomeDetail{DatePaid: "01/15/2568", AmountPaid: "1500.00", TaxWithheld: "150.00"},
-		Income6_Note:         "misc",
-		Totals:               Totals{TotalAmountPaid: "4500.00", TotalTaxWithheld: "450.00", TotalTaxWithheldInWords: "four five zero"},
-		TotalsInWords:        "four thousand five hundred",
+		Income6_Note:         "ใส่หมายเหตุ",
+		Totals:               Totals{TotalAmountPaid: "4500.00", TotalTaxWithheld: "450.00", TotalTaxWithheldInWords: "สี่ร้อยห้าสิบบาทถ้วน"},
+		TotalsInWords:        "สี่ร้อยห้าสิบบาทถ้วน",
 		OtherPayments:        OtherPayments{GovernmentPensionFund: "1", SocialSecurityFund: "2", ProvidentFund: "3"},
 		WithholdingType:      WithholdingType{WithholdingTax: true, Forever: false, OneTime: true, Other: true, OtherDetails: "detail"},
 		Certification:        Certification{DateOfIssuance: DateOfIssuance{Day: "1", Month: "Jan", Year: "2568"}},
@@ -57,7 +57,7 @@ func sampleTaxInfo() TaxInfo {
 }
 
 func TestTextWatermark(t *testing.T) {
-	cfg := TextStmap{Text: "Hello", Dx: 10, Dy: 20, FontSize: 16, FontName: "CustomFont", Position: types.TopLeft}
+	cfg := TextStamp{Text: "Hello", Dx: 10, Dy: 20, FontSize: 16, FontName: "CustomFont", Position: types.TopLeft}
 	wm, err := TextWatermark(cfg)
 	if err != nil {
 		t.Fatalf("TextWatermark error: %v", err)
@@ -65,10 +65,13 @@ func TestTextWatermark(t *testing.T) {
 	if wm.Dx != cfg.Dx || wm.Dy != cfg.Dy || wm.FontSize != cfg.FontSize || wm.FontName != cfg.FontName || wm.Pos != cfg.Position || !wm.ScaleAbs || wm.OnTop != true {
 		t.Fatalf("unexpected watermark fields: %+v", wm)
 	}
+	if wm.FontName != "CustomFont" {
+		t.Fatalf("expected font name CustomFont, got %s", wm.FontName)
+	}
 }
 
 func TestTextWatermark_DefaultFont(t *testing.T) {
-	wm, err := TextWatermark(TextStmap{Text: "X", FontSize: 12})
+	wm, err := TextWatermark(TextStamp{Text: "X", FontSize: 12})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -119,28 +122,10 @@ func TestTickAndCheckmarkStamp(t *testing.T) {
 func TestTextStampsFromTaxInfo(t *testing.T) {
 	tax := sampleTaxInfo()
 	stamps := TextStampsFromTaxInfo(tax)
-	if len(stamps) == 0 {
-		t.Fatalf("expected stamps")
-	}
-	found := map[string]bool{}
-	for _, s := range stamps {
-		if s.Text == tax.Payer.Name {
-			found["payerName"] = true
-		}
-		if s.Text == tax.Payee.Name {
-			found["payeeName"] = true
-		}
-		if s.Text == tax.DocumentDetails.BookNumber {
-			found["book"] = true
-		}
-		if s.Text == tax.Certification.DateOfIssuance.Day {
-			found["day"] = true
-		}
-	}
-	for k, ok := range found {
-		if !ok {
-			t.Fatalf("missing stamp: %s", k)
-		}
+
+	// Check exact count
+	if len(stamps) != 122 {
+		t.Fatalf("expected 122 fields, got %d fields: that is all fields in form 50 tawi", len(stamps))
 	}
 }
 
@@ -177,7 +162,7 @@ func TestReadContext(t *testing.T) {
 func TestBuildWriteAndWHTCertificatePDF(t *testing.T) {
 	png := tinyPNG()
 	// BuildStampedContext
-	texts := []TextStmap{{Text: "t", Dx: 10, Dy: -10, FontSize: 12, Position: types.TopLeft}}
+	texts := []TextStamp{{Text: "t", Dx: 10, Dy: -10, FontSize: 12, Position: types.TopLeft}}
 	images := []ImageStamp{{Reader: bytes.NewReader(png), Pos: types.BottomLeft, Dx: 5, Dy: 5, Scale: 0.1, Opacity: 1, OnTop: true}}
 	ctx, err := BuildStampedContext(mustPDFTemplate(t), texts, images)
 	if err != nil || ctx == nil {
