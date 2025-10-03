@@ -31,7 +31,6 @@ func InstallFonts() error {
 		if err := font.InstallFontFromBytes(font.UserFontDir, ft, fontData); err != nil {
 			return fmt.Errorf("failed to install font %s: %v", ft, err)
 		}
-		fmt.Printf("Installed font: %s\n", ft)
 	}
 
 	// Load user fonts to make them available for use
