@@ -36,7 +36,12 @@ func main() {
 	}
 	defer logoReader.Close()
 
-	if err := pdf50tawi.IssueWHTCertificatePDF(outputFile, DemoTaxInfo(), signatureReader, logoReader); err != nil {
+	taxInfo := DemoTaxInfo()
+	if err := pdf50tawi.ValidateTaxInfo(taxInfo); err != nil {
+		log.Fatalf("Error validating tax info: %v", err)
+	}
+
+	if err := pdf50tawi.IssueWHTCertificatePDF(outputFile, taxInfo, signatureReader, logoReader); err != nil {
 		log.Fatalf("Error adding image stamp: %v", err)
 	}
 
