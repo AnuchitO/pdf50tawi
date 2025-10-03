@@ -97,8 +97,8 @@ func ImageWatermark(stamp ImageStamp) (*model.Watermark, error) {
 
 func CertificateImageStamps(sign io.Reader, logo io.Reader) []ImageStamp {
 	return []ImageStamp{
-		{Reader: sign, Pos: types.BottomCenter, Dx: 105, Dy: 84, Scale: 0.08, Opacity: 1, OnTop: true},
-		{Reader: logo, Pos: types.Center, Dx: 230, Dy: -343, Scale: 0.08, Opacity: 1, OnTop: false, Diagonal: 1},
+		{Reader: sign, Pos: types.Center, Dx: 120, Dy: -328, Scale: 0.08, Opacity: 1, OnTop: true},
+		{Reader: logo, Pos: types.Center, Dx: 230, Dy: -343, Scale: 0.06, Opacity: 1, OnTop: false, Diagonal: 1},
 	}
 }
 
