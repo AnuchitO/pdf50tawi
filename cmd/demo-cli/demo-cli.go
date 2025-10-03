@@ -11,10 +11,9 @@ import (
 
 func main() {
 	outputPDF := flag.String("output", "tax50tawi-stamped.pdf", "Output PDF file")
-	signature := flag.String("signature", "cmd/demo-cli/demo-signature-1280x720.png", "Signature png image file")
-	// logo := flag.String("logo", "cmd/demo-cli/demo-logo-800x800.png", "Logo png image file")
-	logo := flag.String("logo", "cmd/demo-cli/demo-logo-1024x1024.png", "Logo png image file")
-	// logo := flag.String("logo", "cmd/demo-cli/demo-logo-1280x720.png", "Logo png image file")
+	signature := flag.String("signature", "cmd/demo-cli/demo-signature-1280x720-rectangle.png", "Signature png image file")
+	logo := flag.String("logo", "cmd/demo-cli/demo-logo-1024x1024-square.png", "Logo png image file")
+	// logo := flag.String("logo", "cmd/demo-cli/demo-signature-1280x720-rectangle.png", "Logo png image file")
 	flag.Parse()
 
 	// create output file "tax50tawi-stamped.pdf" as io.Writer
