@@ -10,11 +10,11 @@ import (
 
 func LoadImage(image Image, r *http.Request) (io.ReadCloser, error) {
 	switch image.SourceType {
-	case SourceTypeUpload:
+	case Upload:
 		return LoadImageFromMultiPartFile(r, image.Value)
-	case SourceTypeURL:
+	case URL:
 		return LoadImageFromURL(image.Value)
-	case SourceTypeFile:
+	case File:
 		return LoadImageFromFile(image.Value)
 	default:
 		return nil, fmt.Errorf("invalid source type: %s", image.SourceType)

@@ -68,9 +68,9 @@ func (ve *ValidationError) validateImage(image Image) {
 
 	// Validate source type
 	switch image.SourceType {
-	case SourceTypeUpload:
-	case SourceTypeURL:
-	case SourceTypeFile:
+	case Upload:
+	case URL:
+	case File:
 	default:
 		ve.Add("image.sourceType must be 'upload', 'url', or 'file'")
 		return
@@ -83,7 +83,7 @@ func (ve *ValidationError) validateImage(image Image) {
 	}
 
 	// If URL, validate URL format
-	if image.SourceType == SourceTypeURL {
+	if image.SourceType == URL {
 		parsedURL, err := url.Parse(image.Value)
 		if err != nil || parsedURL.Scheme == "" || parsedURL.Host == "" {
 			ve.Add("image.value must be a valid URL")

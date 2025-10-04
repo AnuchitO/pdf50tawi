@@ -98,9 +98,9 @@ type DateOfIssuance struct {
 type SourceType string
 
 const (
-	SourceTypeUpload SourceType = "upload"
-	SourceTypeURL    SourceType = "url"
-	SourceTypeFile   SourceType = "file"
+	Upload SourceType = "upload"
+	URL    SourceType = "url"
+	File   SourceType = "file"
 )
 
 func (s SourceType) String() string {

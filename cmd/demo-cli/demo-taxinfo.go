@@ -68,11 +68,11 @@ func DemoTaxInfo() pdf50tawi.TaxInfo {
 		},
 		Certification: pdf50tawi.Certification{
 			PayerSignatureImage: pdf50tawi.Image{
-				SourceType: pdf50tawi.SourceTypeFile,
+				SourceType: pdf50tawi.File,
 				Value:      "cmd/demo-cli/demo-signature-1280x720-rectangle.png",
 			},
 			CompanySealImage: pdf50tawi.Image{
-				SourceType: pdf50tawi.SourceTypeFile,
+				SourceType: pdf50tawi.File,
 				Value:      "cmd/demo-cli/demo-logo-1024x1024-square.png",
 			},
 			DateOfIssuance: pdf50tawi.DateOfIssuance{
