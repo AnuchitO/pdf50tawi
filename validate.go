@@ -2,6 +2,7 @@ package pdf50tawi
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 )
 
@@ -56,6 +57,39 @@ func (ve *ValidationError) validateParty(prefix, name, tax13, tax10 string) {
 	}
 	if strippedTax10 != "" && !isDigitsLen(strippedTax10, 10) {
 		ve.Add(fmt.Sprintf("%s.taxId10Digit must be 10 digits", prefix))
+	}
+}
+
+func (ve *ValidationError) validateImage(image Image) {
+	// If both source type and value are empty, it's valid (no image)
+	if strings.TrimSpace(string(image.SourceType)) == "" && strings.TrimSpace(image.Value) == "" {
+		return
+	}
+
+	// Validate source type
+	validSourceTypes := map[SourceType]bool{
+		SourceTypeUpload: true,
+		SourceTypeURL:    true,
+		SourceTypeFile:   true,
+	}
+
+	if !validSourceTypes[image.SourceType] {
+		ve.Add("image.sourceType is required")
+		return
+	}
+
+	// Validate value is not empty
+	if strings.TrimSpace(image.Value) == "" {
+		ve.Add("image.value is required for '" + string(image.SourceType) + "' source type")
+		return
+	}
+
+	// If URL, validate URL format
+	if image.SourceType == SourceTypeURL {
+		parsedURL, err := url.Parse(image.Value)
+		if err != nil || parsedURL.Scheme == "" || parsedURL.Host == "" {
+			ve.Add("image.value is must be a valid URL")
+		}
 	}
 }
 

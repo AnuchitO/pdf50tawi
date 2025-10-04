@@ -244,3 +244,50 @@ func TestValidateTaxInfo_AllErrors(t *testing.T) {
 		}
 	}
 }
+
+func TestValidateImage(t *testing.T) {
+	var ve ValidationError
+
+	// sourctype will be empty or url or file or upload
+	testCases := []struct {
+		name             string
+		image            Image
+		expectedErrorMsg string
+	}{
+		// Success cases
+		{"Valid_Url", Image{SourceType: SourceTypeURL, Value: "https://example.com/image.png"}, ""},
+		{"Valid_File", Image{SourceType: SourceTypeFile, Value: "path/to/image.png"}, ""},
+		{"Valid_Upload", Image{SourceType: SourceTypeUpload, Value: "path/to/image.png"}, ""},
+		{"Valid_SourceType_empty_value_should_be_empty", Image{SourceType: "", Value: ""}, ""},
+		// // Failure cases
+		{"Invalid_SourceType", Image{SourceType: "invalid", Value: "path/to/image.png"}, "image.sourceType is required"},
+		{"Invalid_Value", Image{SourceType: SourceTypeURL, Value: ""}, "image.value is required for 'url' source type"},
+		{"Invalid_Url", Image{SourceType: SourceTypeURL, Value: "invalid-url"}, "image.value is must be a valid URL"},
+		{"Invalid_SourceType_empty_value_not_be_empty", Image{SourceType: "", Value: "path/to/image.png"}, "image.sourceType is required"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			// Reset validation error for each test
+			ve = ValidationError{}
+
+			// Test validateImage directly
+			ve.validateImage(tc.image)
+
+			if tc.expectedErrorMsg == "" {
+				// Expect no error
+				if ve.HasErrors() {
+					t.Fatalf("expected no error for %s, got %v", tc.name, ve.Error())
+				}
+			} else {
+				// Expect specific error
+				if !ve.HasErrors() {
+					t.Fatalf("expected error for %s, got no error", tc.name)
+				}
+				if !strings.Contains(ve.Error(), tc.expectedErrorMsg) {
+					t.Fatalf("expected error to contain %q, got %q", tc.expectedErrorMsg, ve.Error())
+				}
+			}
+		})
+	}
+}
