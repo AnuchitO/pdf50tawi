@@ -260,10 +260,10 @@ func TestValidateImage(t *testing.T) {
 		{"Valid_Upload", Image{SourceType: SourceTypeUpload, Value: "path/to/image.png"}, ""},
 		{"Valid_SourceType_empty_value_should_be_empty", Image{SourceType: "", Value: ""}, ""},
 		// // Failure cases
-		{"Invalid_SourceType", Image{SourceType: "invalid", Value: "path/to/image.png"}, "image.sourceType is required"},
+		{"Invalid_SourceType", Image{SourceType: "invalid", Value: "path/to/image.png"}, "image.sourceType must be 'upload', 'url', or 'file'"},
 		{"Invalid_Value", Image{SourceType: SourceTypeURL, Value: ""}, "image.value is required for 'url' source type"},
-		{"Invalid_Url", Image{SourceType: SourceTypeURL, Value: "invalid-url"}, "image.value is must be a valid URL"},
-		{"Invalid_SourceType_empty_value_not_be_empty", Image{SourceType: "", Value: "path/to/image.png"}, "image.sourceType is required"},
+		{"Invalid_Url", Image{SourceType: SourceTypeURL, Value: "invalid-url"}, "image.value must be a valid URL"},
+		{"Invalid_SourceType_empty_value_not_be_empty", Image{SourceType: "", Value: "path/to/image.png"}, "image.sourceType must be 'upload', 'url', or 'file'"},
 	}
 
 	for _, tc := range testCases {

@@ -103,6 +103,10 @@ const (
 	SourceTypeFile   SourceType = "file"
 )
 
+func (s SourceType) String() string {
+	return string(s)
+}
+
 type Image struct {
 	SourceType SourceType `json:"sourceType"` // "upload" or "url" or "file"
 	Value      string     `json:"value"`

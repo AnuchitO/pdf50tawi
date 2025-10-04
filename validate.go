@@ -62,25 +62,23 @@ func (ve *ValidationError) validateParty(prefix, name, tax13, tax10 string) {
 
 func (ve *ValidationError) validateImage(image Image) {
 	// If both source type and value are empty, it's valid (no image)
-	if strings.TrimSpace(string(image.SourceType)) == "" && strings.TrimSpace(image.Value) == "" {
+	if strings.TrimSpace(image.SourceType.String()) == "" && strings.TrimSpace(image.Value) == "" {
 		return
 	}
 
 	// Validate source type
-	validSourceTypes := map[SourceType]bool{
-		SourceTypeUpload: true,
-		SourceTypeURL:    true,
-		SourceTypeFile:   true,
-	}
-
-	if !validSourceTypes[image.SourceType] {
-		ve.Add("image.sourceType is required")
+	switch image.SourceType {
+	case SourceTypeUpload:
+	case SourceTypeURL:
+	case SourceTypeFile:
+	default:
+		ve.Add("image.sourceType must be 'upload', 'url', or 'file'")
 		return
 	}
 
 	// Validate value is not empty
 	if strings.TrimSpace(image.Value) == "" {
-		ve.Add("image.value is required for '" + string(image.SourceType) + "' source type")
+		ve.Add(fmt.Sprintf("image.value is required for '%s' source type", image.SourceType.String()))
 		return
 	}
 
@@ -88,7 +86,7 @@ func (ve *ValidationError) validateImage(image Image) {
 	if image.SourceType == SourceTypeURL {
 		parsedURL, err := url.Parse(image.Value)
 		if err != nil || parsedURL.Scheme == "" || parsedURL.Host == "" {
-			ve.Add("image.value is must be a valid URL")
+			ve.Add("image.value must be a valid URL")
 		}
 	}
 }
