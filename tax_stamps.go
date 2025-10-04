@@ -315,12 +315,18 @@ func ReadContext(inFile io.ReadSeeker) (*model.Context, error) {
 }
 
 // BuildStampedContext // take inputPDF and  return *model.Context
-func BuildStampedContext(inputPDF io.ReadSeeker, textStamps []TextStamp, imageStamps []ImageStamp) (*model.Context, error) {
+func BuildStampedContext(textStamps []TextStamp, imageStamps []ImageStamp) (*model.Context, error) {
 	// Ensure fonts are installed before any watermarking occurs
 	if err := InstallFonts(); err != nil {
 		return nil, err
 	}
-	ctx, err := ReadContext(inputPDF)
+
+	template, err := Tax50tawiPDFTemplate()
+	if err != nil {
+		return nil, err
+	}
+
+	ctx, err := ReadContext(template)
 	if err != nil {
 		return nil, err
 	}
@@ -344,20 +350,26 @@ func WriteStampedPDF(ctx *model.Context, outputPDF io.Writer) error {
 	return api.WriteContext(ctx, outputPDF)
 }
 
-func IssueWHTCertificatePDF(outputPDF io.Writer, taxInfo TaxInfo, sign io.Reader, logo io.Reader) error {
-	inputPDF, err := Tax50tawiPDFTemplate()
+func IssueWHTCertificatePDF(outputPDF io.Writer, taxInfo TaxInfo) error {
+
+	sign, err := LoadImage(taxInfo.Certification.PayerSignatureImage, nil)
 	if err != nil {
 		return err
 	}
-	return WHTCertificatePDF(outputPDF, inputPDF, taxInfo, sign, logo)
+	logo, err := LoadImage(taxInfo.Certification.CompanySealImage, nil)
+	if err != nil {
+		return err
+	}
+
+	return WHTCertificatePDF(outputPDF, taxInfo, sign, logo)
 }
 
 // WHTCertificatePDF
-func WHTCertificatePDF(outputPDF io.Writer, inputPDF io.ReadSeeker, taxInfo TaxInfo, sign io.Reader, logo io.Reader) error {
+func WHTCertificatePDF(outputPDF io.Writer, taxInfo TaxInfo, sign io.Reader, logo io.Reader) error {
 	images := CertificateImageStamps(sign, logo)
 	texts := TextStampsFromTaxInfo(taxInfo)
 
-	ctx, err := BuildStampedContext(inputPDF, texts, images)
+	ctx, err := BuildStampedContext(texts, images)
 	if err != nil {
 		return err
 	}

@@ -3,7 +3,7 @@ package main
 import "github.com/anuchito/pdf50tawi"
 
 // demo tax info
-func DemoTaxInfo() pdf50tawi.TaxInfo {
+func demoTaxInfo() pdf50tawi.TaxInfo {
 	return pdf50tawi.TaxInfo{
 		DocumentDetails: pdf50tawi.DocumentDetails{
 			BookNumber:     "001",
