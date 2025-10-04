@@ -349,11 +349,11 @@ func IssueWHTCertificatePDF(outputPDF io.Writer, taxInfo TaxInfo, sign io.Reader
 	if err != nil {
 		return err
 	}
-	return WHTCertificatePDF(inputPDF, outputPDF, taxInfo, sign, logo)
+	return WHTCertificatePDF(outputPDF, inputPDF, taxInfo, sign, logo)
 }
 
 // WHTCertificatePDF
-func WHTCertificatePDF(inputPDF io.ReadSeeker, outputPDF io.Writer, taxInfo TaxInfo, sign io.Reader, logo io.Reader) error {
+func WHTCertificatePDF(outputPDF io.Writer, inputPDF io.ReadSeeker, taxInfo TaxInfo, sign io.Reader, logo io.Reader) error {
 	images := CertificateImageStamps(sign, logo)
 	texts := TextStampsFromTaxInfo(taxInfo)
 
