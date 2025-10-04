@@ -95,11 +95,21 @@ type DateOfIssuance struct {
 	Year  string `json:"year"`
 }
 
+type SourceType string
+
+const (
+	SourceTypeUpload SourceType = "upload"
+	SourceTypeURL    SourceType = "url"
+	SourceTypeFile   SourceType = "file"
+)
+
+type Image struct {
+	SourceType SourceType `json:"sourceType"` // "upload" or "url" or "file"
+	Value      string     `json:"value"`
+}
+
 type Certification struct {
-	PayerSignatureText               string         `json:"payerSignatureText"`
-	PayerSignatureImageFileLocalPath string         `json:"payerSignatureImageFileLocalPath"`
-	PayerSignatureImageURL           string         `json:"payerSignatureImageURL"`
-	PayerSignatureImageBase64        string         `json:"payerSignatureImageBase64"`
-	JuristicPersonSeal               string         `json:"juristicPersonSeal"`
-	DateOfIssuance                   DateOfIssuance `json:"dateOfIssuance"`
+	PayerSignatureImage Image          `json:"payerSignatureImage"`
+	CompanySealImage    Image          `json:"companySealImage"`
+	DateOfIssuance      DateOfIssuance `json:"dateOfIssuance"`
 }

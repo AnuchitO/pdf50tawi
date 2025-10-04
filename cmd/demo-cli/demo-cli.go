@@ -38,11 +38,22 @@ func main() {
 	defer logoReader.Close()
 
 	taxInfo := DemoTaxInfo()
+	// demo logo url
+	taxInfo.Certification.CompanySealImage = pdf50tawi.Image{
+		SourceType: pdf50tawi.SourceTypeURL,
+		Value:      "https://raw.githubusercontent.com/AnuchitO/pdf50tawi/main/cmd/demo-cli/demo-logo-1024x1024-square.png",
+	}
 	if err := pdf50tawi.ValidateTaxInfo(taxInfo); err != nil {
 		log.Fatalf("Error validating tax info: %v", err)
 	}
 
-	if err := pdf50tawi.IssueWHTCertificatePDF(outputFile, taxInfo, signatureReader, logoReader); err != nil {
+	logoReaderx, err := pdf50tawi.LoadImage(taxInfo.Certification.CompanySealImage, nil)
+	if err != nil {
+		log.Fatalf("Error loading logo image: %v", err)
+	}
+	defer logoReaderx.Close()
+
+	if err := pdf50tawi.IssueWHTCertificatePDF(outputFile, taxInfo, signatureReader, logoReaderx); err != nil {
 		log.Fatalf("Error adding image stamp: %v", err)
 	}
 
