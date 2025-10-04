@@ -15,10 +15,26 @@ func LoadImage(image Image, r *http.Request) (io.ReadCloser, error) {
 	case SourceTypeURL:
 		return LoadImageFromURL(image.Value)
 	case SourceTypeFile:
-		return os.Open(image.Value)
+		return LoadImageFromFile(image.Value)
 	default:
 		return nil, fmt.Errorf("invalid source type: %s", image.SourceType)
 	}
+}
+
+func LoadImageFromFile(file string) (io.ReadCloser, error) {
+	f, err := os.Open(file)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	var buf bytes.Buffer
+	_, err = io.Copy(&buf, f)
+	if err != nil {
+		return nil, err
+	}
+
+	return io.NopCloser(bytes.NewReader(buf.Bytes())), nil
 }
 
 func LoadImageFromMultiPartFile(r *http.Request, file string) (io.ReadCloser, error) {
@@ -32,7 +48,13 @@ func LoadImageFromMultiPartFile(r *http.Request, file string) (io.ReadCloser, er
 		return nil, fmt.Errorf("invalid content type: %s", header.Header.Get("Content-Type"))
 	}
 
-	return f, nil
+	var buf bytes.Buffer
+	_, err = io.Copy(&buf, f)
+	if err != nil {
+		return nil, err
+	}
+
+	return io.NopCloser(bytes.NewReader(buf.Bytes())), nil
 }
 
 func LoadImageFromURL(url string) (io.ReadCloser, error) {
@@ -50,10 +72,11 @@ func LoadImageFromURL(url string) (io.ReadCloser, error) {
 		return nil, fmt.Errorf("invalid content type: %s", resp.Header.Get("Content-Type"))
 	}
 
-	body, err := io.ReadAll(resp.Body)
+	var buf bytes.Buffer
+	_, err = io.Copy(&buf, resp.Body)
 	if err != nil {
 		return nil, err
 	}
 
-	return io.NopCloser(bytes.NewReader(body)), nil
+	return io.NopCloser(bytes.NewReader(buf.Bytes())), nil
 }

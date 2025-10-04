@@ -43,6 +43,12 @@ func main() {
 		SourceType: pdf50tawi.SourceTypeURL,
 		Value:      "https://raw.githubusercontent.com/AnuchitO/pdf50tawi/main/cmd/demo-cli/demo-logo-1024x1024-square.png",
 	}
+
+	// demo logo file
+	taxInfo.Certification.CompanySealImage = pdf50tawi.Image{
+		SourceType: pdf50tawi.SourceTypeFile,
+		Value:      "cmd/demo-cli/demo-logo-1024x1024-square.png",
+	}
 	if err := pdf50tawi.ValidateTaxInfo(taxInfo); err != nil {
 		log.Fatalf("Error validating tax info: %v", err)
 	}
