@@ -2,28 +2,11 @@ package pdf50tawi
 
 import (
 	"bytes"
-	"image"
-	"image/color"
-	"image/png"
 	"io"
 	"testing"
 
 	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu/types"
 )
-
-func tinyPNG() []byte {
-	img := image.NewRGBA(image.Rect(0, 0, 2, 2))
-	// fill with red
-	for y := 0; y < 2; y++ {
-		for x := 0; x < 2; x++ {
-			// set pixel
-			img.Set(x, y, color.RGBA{R: 255, A: 255})
-		}
-	}
-	var buf bytes.Buffer
-	_ = png.Encode(&buf, img)
-	return buf.Bytes()
-}
 
 func sampleTaxInfo() TaxInfo {
 	return TaxInfo{
@@ -81,7 +64,7 @@ func TestTextWatermark_DefaultFont(t *testing.T) {
 }
 
 func TestImageWatermark(t *testing.T) {
-	img := tinyPNG()
+	img := tinyEmptyPNG()
 	wm, err := ImageWatermark(ImageStamp{Reader: bytes.NewReader(img), Pos: types.BottomRight, Dx: 3, Dy: 4, Scale: 0.5, Opacity: 0.8, OnTop: true})
 	if err != nil {
 		t.Fatalf("ImageWatermark error: %v", err)
@@ -130,13 +113,42 @@ func TestTextStampsFromTaxInfo(t *testing.T) {
 }
 
 func TestCertificateImageStamps(t *testing.T) {
-	pngBytes := tinyPNG()
+	pngBytes := tinyEmptyPNG()
 	st := CertificateImageStamps(bytes.NewReader(pngBytes), bytes.NewReader(pngBytes))
 	if len(st) != 2 {
 		t.Fatalf("expected 2 image stamps")
 	}
 	if st[0].Reader == nil || st[1].Reader == nil {
 		t.Fatalf("expected non-nil readers")
+	}
+}
+
+func TestCertificateImageStampsWithNilInputs(t *testing.T) {
+	// Test the ifNil fallback case - when inputs are nil
+	st := CertificateImageStamps(nil, nil)
+	if len(st) != 2 {
+		t.Fatalf("expected 2 image stamps even with nil inputs")
+	}
+
+	// Verify that nil inputs are replaced with valid readers
+	if st[0].Reader == nil {
+		t.Fatalf("expected signature reader to be non-nil (should fallback to empty PNG)")
+	}
+	if st[1].Reader == nil {
+		t.Fatalf("expected logo reader to be non-nil (should fallback to empty PNG)")
+	}
+
+	// Verify the readers contain valid PNG data by checking length
+	signBytes := make([]byte, 100)
+	n, _ := st[0].Reader.Read(signBytes)
+	if n < 10 { // Should have at least PNG signature
+		t.Fatalf("expected valid PNG data in signature reader, got %d bytes", n)
+	}
+
+	logoBytes := make([]byte, 100)
+	n, _ = st[1].Reader.Read(logoBytes)
+	if n < 10 { // Should have at least PNG signature
+		t.Fatalf("expected valid PNG data in logo reader, got %d bytes", n)
 	}
 }
 
@@ -160,11 +172,11 @@ func TestReadContext(t *testing.T) {
 }
 
 func TestBuildWriteAndWHTCertificatePDF(t *testing.T) {
-	png := tinyPNG()
+	png := tinyEmptyPNG()
 	// BuildStampedContext
 	texts := []TextStamp{{Text: "t", Dx: 10, Dy: -10, FontSize: 12, Position: types.TopLeft}}
 	images := []ImageStamp{{Reader: bytes.NewReader(png), Pos: types.BottomLeft, Dx: 5, Dy: 5, Scale: 0.1, Opacity: 1, OnTop: true}}
-	ctx, err := BuildStampedContext(mustPDFTemplate(t), texts, images)
+	ctx, err := BuildStampedContext(texts, images)
 	if err != nil || ctx == nil {
 		t.Fatalf("BuildStampedContext error: %v", err)
 	}
@@ -178,21 +190,10 @@ func TestBuildWriteAndWHTCertificatePDF(t *testing.T) {
 	}
 	// WHTCertificatePDF using embedded template
 	var out2 bytes.Buffer
-	if err := WHTCertificatePDF(mustPDFTemplate(t), &out2, sampleTaxInfo(), bytes.NewReader(png), bytes.NewReader(png)); err != nil {
+	if err := IssueWHTCertificatePDF(&out2, sampleTaxInfo(), bytes.NewReader(png), bytes.NewReader(png)); err != nil {
 		t.Fatalf("WHTCertificatePDF error: %v", err)
 	}
 	if out2.Len() == 0 {
 		t.Fatalf("expected output bytes for WHTCertificatePDF")
-	}
-}
-
-func TestIssueWHTCertificatePDF(t *testing.T) {
-	png := tinyPNG()
-	var out bytes.Buffer
-	if err := IssueWHTCertificatePDF(&out, sampleTaxInfo(), bytes.NewReader(png), bytes.NewReader(png)); err != nil {
-		t.Fatalf("IssueWHTCertificatePDF error: %v", err)
-	}
-	if out.Len() == 0 {
-		t.Fatalf("expected non-empty output from IssueWHTCertificatePDF")
 	}
 }

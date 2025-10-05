@@ -1,6 +1,7 @@
 package pdf50tawi
 
 import (
+	"bytes"
 	"io"
 	"strings"
 
@@ -97,9 +98,16 @@ func ImageWatermark(stamp ImageStamp) (*model.Watermark, error) {
 
 func CertificateImageStamps(sign io.Reader, logo io.Reader) []ImageStamp {
 	return []ImageStamp{
-		{Reader: sign, Pos: types.Center, Dx: 120, Dy: -328, Scale: 0.08, Opacity: 1, OnTop: true},
-		{Reader: logo, Pos: types.Center, Dx: 230, Dy: -343, Scale: 0.06, Opacity: 1, OnTop: false, Diagonal: 1},
+		{Reader: ifNil(sign), Pos: types.Center, Dx: 120, Dy: -328, Scale: 0.08, Opacity: 1, OnTop: true},
+		{Reader: ifNil(logo), Pos: types.Center, Dx: 230, Dy: -343, Scale: 0.06, Opacity: 1, OnTop: false, Diagonal: 1},
 	}
+}
+
+func ifNil(img io.Reader) io.Reader {
+	if img == nil {
+		return bytes.NewReader(tinyEmptyPNG())
+	}
+	return img
 }
 
 // positionTaxID13Digits creates individual text stamps for each digit of a tax ID
@@ -350,22 +358,22 @@ func WriteStampedPDF(ctx *model.Context, outputPDF io.Writer) error {
 	return api.WriteContext(ctx, outputPDF)
 }
 
-func IssueWHTCertificatePDF(outputPDF io.Writer, taxInfo TaxInfo) error {
+func IssueWHTCertificatePDFDeprecated(outputPDF io.Writer, taxInfo TaxInfo) error {
 
-	sign, err := LoadImage(taxInfo.Certification.PayerSignatureImage, nil)
+	sign, err := LoadImage(taxInfo.Certification.PayerSignatureImage)
 	if err != nil {
 		return err
 	}
-	logo, err := LoadImage(taxInfo.Certification.CompanySealImage, nil)
+	logo, err := LoadImage(taxInfo.Certification.CompanySealImage)
 	if err != nil {
 		return err
 	}
 
-	return WHTCertificatePDF(outputPDF, taxInfo, sign, logo)
+	return IssueWHTCertificatePDF(outputPDF, taxInfo, sign, logo)
 }
 
-// WHTCertificatePDF
-func WHTCertificatePDF(outputPDF io.Writer, taxInfo TaxInfo, sign io.Reader, logo io.Reader) error {
+// IssueWHTCertificatePDF
+func IssueWHTCertificatePDF(outputPDF io.Writer, taxInfo TaxInfo, sign io.Reader, logo io.Reader) error {
 	images := CertificateImageStamps(sign, logo)
 	texts := TextStampsFromTaxInfo(taxInfo)
 

@@ -3,24 +3,68 @@ package pdf50tawi
 import (
 	"bytes"
 	"fmt"
+	"image"
+	"image/color"
+	"image/png"
 	"io"
 	"net/http"
 	"os"
 )
 
-func LoadImage(image Image, r *http.Request) (io.ReadCloser, error) {
+// LoadOption represents an option for LoadImage function
+type LoadOption func(*loadOptions)
+
+type loadOptions struct {
+	httpRequest *http.Request
+}
+
+// WithHTTPRequest adds HTTP request context for multipart file uploads
+func WithHTTPRequest(r *http.Request) LoadOption {
+	return func(opts *loadOptions) {
+		opts.httpRequest = r
+	}
+}
+
+func tinyEmptyPNG() []byte {
+	size := 1
+	img := image.NewRGBA(image.Rect(0, 0, size, size))
+	for y := 0; y < size; y++ {
+		for x := 0; x < size; x++ {
+			img.Set(x, y, color.Transparent)
+		}
+	}
+	var buf bytes.Buffer
+	_ = png.Encode(&buf, img)
+	return buf.Bytes()
+}
+
+// LoadImage loads an image based on its source type
+// For Upload source type, pass WithHTTPRequest(r) option
+// For File and URL source types, no options needed
+func LoadImage(image Image, options ...LoadOption) (io.ReadCloser, error) {
+	opts := &loadOptions{}
+	for _, opt := range options {
+		opt(opts)
+	}
+
 	switch image.SourceType {
 	case Upload:
-		return LoadImageFromMultiPartFile(r, image.Value)
+		if opts.httpRequest == nil {
+			return nil, fmt.Errorf("LoadImage: Upload source type requires HTTP request context. Use LoadImage(image, WithHTTPRequest(r))")
+		}
+		return LoadImageFromMultiPartFile(opts.httpRequest, image.Value)
 	case URL:
 		return LoadImageFromURL(image.Value)
 	case File:
 		return LoadImageFromFile(image.Value)
+	case "":
+		return io.NopCloser(bytes.NewReader(tinyEmptyPNG())), nil
 	default:
-		return nil, fmt.Errorf("invalid source type: %s", image.SourceType)
+		return nil, fmt.Errorf("LoadImage: unsupported source type: %s", image.SourceType)
 	}
 }
 
+// LoadImageFromFile loads image from file path (no HTTP context needed)
 func LoadImageFromFile(file string) (io.ReadCloser, error) {
 	f, err := os.Open(file)
 	if err != nil {
@@ -37,6 +81,8 @@ func LoadImageFromFile(file string) (io.ReadCloser, error) {
 	return io.NopCloser(bytes.NewReader(buf.Bytes())), nil
 }
 
+// LoadImageFromMultiPartFile loads image from multipart form upload (requires HTTP context)
+// Use this function in web handlers when dealing with file uploads
 func LoadImageFromMultiPartFile(r *http.Request, file string) (io.ReadCloser, error) {
 	f, header, err := r.FormFile(file)
 	if err != nil {
@@ -57,6 +103,7 @@ func LoadImageFromMultiPartFile(r *http.Request, file string) (io.ReadCloser, er
 	return io.NopCloser(bytes.NewReader(buf.Bytes())), nil
 }
 
+// LoadImageFromURL loads image from URL (no HTTP context needed)
 func LoadImageFromURL(url string) (io.ReadCloser, error) {
 	resp, err := http.Get(url)
 	if err != nil {

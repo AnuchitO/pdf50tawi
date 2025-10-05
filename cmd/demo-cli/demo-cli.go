@@ -10,12 +10,22 @@ import (
 )
 
 func main() {
-	// demoUsingTaxInfo()
-	demoPassSignatureAndLogoUsingFlag()
+	demoUsingTaxInfo()
+	// demoPassSignatureAndLogoUsingFlag()
 }
 
 func demoUsingTaxInfo() {
 	taxInfo := demoTaxInfo()
+
+	if err := pdf50tawi.ValidateTaxInfo(taxInfo); err != nil {
+		log.Fatalf("Error validating tax info: %v\n", err)
+	}
+
+	sign, err := pdf50tawi.LoadImage(taxInfo.Certification.PayerSignatureImage)
+	if err != nil {
+		log.Fatalf("load signature image fail: %s\n", err)
+	}
+	defer sign.Close()
 
 	// demo logo url
 	// taxInfo.Certification.CompanySealImage = pdf50tawi.Image{
@@ -23,9 +33,11 @@ func demoUsingTaxInfo() {
 	// 	Value:      "https://raw.githubusercontent.com/AnuchitO/pdf50tawi/main/cmd/demo-cli/demo-logo-1024x1024-square.png",
 	// }
 
-	if err := pdf50tawi.ValidateTaxInfo(taxInfo); err != nil {
-		log.Fatalf("Error validating tax info: %v", err)
+	seal, err := pdf50tawi.LoadImage(taxInfo.Certification.CompanySealImage)
+	if err != nil {
+		log.Fatalf("load company seal image fail: %s\n", err)
 	}
+	defer seal.Close()
 
 	outputFile, err := os.Create("tax50tawi-stamped.pdf")
 	if err != nil {
@@ -33,7 +45,7 @@ func demoUsingTaxInfo() {
 	}
 	defer outputFile.Close()
 
-	if err := pdf50tawi.IssueWHTCertificatePDF(outputFile, taxInfo); err != nil {
+	if err := pdf50tawi.IssueWHTCertificatePDF(outputFile, taxInfo, sign, seal); err != nil {
 		log.Fatalf("Error adding image stamp: %v", err)
 	}
 
@@ -74,7 +86,7 @@ func demoPassSignatureAndLogoUsingFlag() {
 		log.Fatalf("Error validating tax info: %v", err)
 	}
 
-	if err := pdf50tawi.WHTCertificatePDF(outputFile, taxInfo, sign, companySeal); err != nil {
+	if err := pdf50tawi.IssueWHTCertificatePDF(outputFile, taxInfo, sign, companySeal); err != nil {
 		log.Fatalf("Error adding image stamp: %v", err)
 	}
 

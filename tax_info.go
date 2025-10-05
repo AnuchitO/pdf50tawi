@@ -1,5 +1,7 @@
 package pdf50tawi
 
+import "io"
+
 type TaxInfo struct {
 	DocumentDetails DocumentDetails `json:"documentDetails"`
 	Payer           Payer           `json:"payer"`
@@ -116,4 +118,26 @@ type Certification struct {
 	PayerSignatureImage Image          `json:"payerSignatureImage"`
 	CompanySealImage    Image          `json:"companySealImage"`
 	DateOfIssuance      DateOfIssuance `json:"dateOfIssuance"`
+}
+
+type FillTaxInfo struct {
+	SignatureImage io.Reader
+	SealImage      io.Reader
+}
+
+// ResolveImagesForPDF prepares a 50 Tawi tax certificate structure for PDF generation
+// by creating a version that can hold actual image readers for signature and seal
+func ResolveImagesForPDF(certification Certification, options ...LoadOption) (FillTaxInfo, error) {
+	sign, err := LoadImage(certification.PayerSignatureImage, options...)
+	if err != nil {
+		return FillTaxInfo{}, err
+	}
+	seal, err := LoadImage(certification.CompanySealImage, options...)
+	if err != nil {
+		return FillTaxInfo{}, err
+	}
+	return FillTaxInfo{
+		SignatureImage: sign,
+		SealImage:      seal,
+	}, nil
 }
