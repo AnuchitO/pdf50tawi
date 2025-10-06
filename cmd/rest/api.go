@@ -55,6 +55,7 @@ func handleTaxCertificate(c echo.Context) error {
 		})
 	}
 
+	// TODO: resolve images from multipart form upload so that not depends on framwork
 	// read signatureImage into buffer
 	files := form.File["signatureImage"] // or "companySeal"
 	if len(files) == 0 {
@@ -72,8 +73,8 @@ func handleTaxCertificate(c echo.Context) error {
 	defer file.Close()
 
 	// Read file into buffer
-	var buf bytes.Buffer
-	if _, err := io.Copy(&buf, file); err != nil {
+	var sign bytes.Buffer
+	if _, err := io.Copy(&sign, file); err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{
 			"error": "Failed to read file",
 		})
@@ -96,22 +97,10 @@ func handleTaxCertificate(c echo.Context) error {
 	defer file.Close()
 
 	// Read file into buffer
-	var buf2 bytes.Buffer
-	if _, err := io.Copy(&buf2, file); err != nil {
+	var seal bytes.Buffer
+	if _, err := io.Copy(&seal, file); err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{
 			"error": "Failed to read file",
-		})
-	}
-
-	// TODO: resolve images from multipart form upload
-
-	sign := io.NopCloser(&buf)
-	seal := io.NopCloser(&buf2)
-
-	out := c.Response().Writer
-	if err := pdf50tawi.IssueWHTCertificatePDF(out, taxInfo, sign, seal); err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{
-			"error": "Failed to generate PDF: " + err.Error(),
 		})
 	}
 
@@ -119,7 +108,14 @@ func handleTaxCertificate(c echo.Context) error {
 	c.Response().Header().Set("Content-Type", "application/pdf")
 	c.Response().Header().Set("Content-Disposition", "attachment; filename=certificate.pdf")
 
-	return nil
+	var certificate bytes.Buffer
+	if err := pdf50tawi.IssueWHTCertificatePDF(&certificate, taxInfo, &sign, &seal); err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{
+			"error": "Failed to generate PDF: " + err.Error(),
+		})
+	}
+
+	return c.Stream(http.StatusOK, "application/pdf", &certificate)
 }
 
 // parseTaxInfoFromForm parses complete tax information from multipart form data
