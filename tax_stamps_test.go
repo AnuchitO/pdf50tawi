@@ -101,16 +101,28 @@ func TestPositionHelpers(t *testing.T) {
 }
 
 func TestTickAndCheckmarkStamp(t *testing.T) {
-	if tick(true) != string(rune(52)) {
-		t.Fatalf("tick(true) unexpected")
-	}
-	if tick(false) != " " {
-		t.Fatalf("tick(false) unexpected")
-	}
-	c := checkmark(true, 1.5, -2.5)
-	if c.Text != string(rune(52)) || c.FontName != "ZapfDingbats" || c.FontSize != 10 || c.Dx != 1.5 || c.Dy != -2.5 || c.Position != types.TopLeft {
-		t.Fatalf("checkmark stamp mismatch: %+v", c)
-	}
+	t.Run("tick", func(t *testing.T) {
+		if tick(true) != string(rune(52)) {
+			t.Fatalf("tick(true) should return tick")
+		}
+		if tick(false) != " " {
+			t.Fatalf("tick(false) should return space")
+		}
+	})
+
+	t.Run("checkmark", func(t *testing.T) {
+		c := checkmark(true, 1.5, -2.5)
+		if c.Text != string(rune(52)) || c.FontName != "ZapfDingbats" || c.FontSize != 10 || c.Dx != 1.5 || c.Dy != -2.5 || c.Position != types.TopLeft {
+			t.Fatalf("checkmark stamp mismatch: %+v", c)
+		}
+	})
+
+	t.Run("checkmark with default values", func(t *testing.T) {
+		c := checkmark(false, 0, 0)
+		if c.Text != " " || c.FontName != "ZapfDingbats" || c.FontSize != 10 || c.Dx != 0 || c.Dy != 0 || c.Position != types.TopLeft {
+			t.Fatalf("checkmark stamp mismatch: %+v", c)
+		}
+	})
 }
 
 func TestTextStampsFromTaxInfo(t *testing.T) {
