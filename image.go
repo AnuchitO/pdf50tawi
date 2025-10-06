@@ -28,8 +28,8 @@ func WithHTTPRequest(r *http.Request) LoadOption {
 func tinyEmptyPNG() []byte {
 	size := 1
 	img := image.NewRGBA(image.Rect(0, 0, size, size))
-	for y := 0; y < size; y++ {
-		for x := 0; x < size; x++ {
+	for y := range size {
+		for x := range size {
 			img.Set(x, y, color.Transparent)
 		}
 	}
