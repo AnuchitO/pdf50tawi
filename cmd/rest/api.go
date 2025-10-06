@@ -55,52 +55,10 @@ func handleTaxCertificate(c echo.Context) error {
 		})
 	}
 
-	// TODO: resolve images from multipart form upload so that not depends on framwork
-	// read signatureImage into buffer
-	files := form.File["signatureImage"] // or "companySeal"
-	if len(files) == 0 {
-		return c.JSON(http.StatusBadRequest, map[string]string{
-			"error": "No signature image uploaded",
-		})
-	}
-
-	file, err := files[0].Open()
+	sign, seal, err := loadImages(taxInfo.Certification, c.Request())
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{
-			"error": "Failed to open signature image: " + err.Error(),
-		})
-	}
-	defer file.Close()
-
-	// Read file into buffer
-	var sign bytes.Buffer
-	if _, err := io.Copy(&sign, file); err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{
-			"error": "Failed to read file",
-		})
-	}
-
-	// read sealImage into buffer
-	files = form.File["companySeal"]
-	if len(files) == 0 {
 		return c.JSON(http.StatusBadRequest, map[string]string{
-			"error": "No company seal image uploaded",
-		})
-	}
-
-	file, err = files[0].Open()
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{
-			"error": "Failed to open company seal image: " + err.Error(),
-		})
-	}
-	defer file.Close()
-
-	// Read file into buffer
-	var seal bytes.Buffer
-	if _, err := io.Copy(&seal, file); err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{
-			"error": "Failed to read file",
+			"error": "Failed to load images: " + err.Error(),
 		})
 	}
 
@@ -116,6 +74,34 @@ func handleTaxCertificate(c echo.Context) error {
 	}
 
 	return c.Stream(http.StatusOK, "application/pdf", &certificate)
+}
+
+func loadImages(cert pdf50tawi.Certification, r *http.Request) (bytes.Buffer, bytes.Buffer, error) {
+	signImage, err := pdf50tawi.LoadImage(cert.PayerSignatureImage, pdf50tawi.WithHTTPRequest(r))
+	if err != nil {
+		return bytes.Buffer{}, bytes.Buffer{}, errors.New("Failed to load signature image: " + err.Error())
+	}
+	defer signImage.Close()
+
+	// Read file into buffer
+	var sign bytes.Buffer
+	if _, err := io.Copy(&sign, signImage); err != nil {
+		return bytes.Buffer{}, bytes.Buffer{}, errors.New("Failed to read file: " + err.Error())
+	}
+
+	// read sealImage into buffer
+	sealImage, err := pdf50tawi.LoadImage(cert.CompanySealImage, pdf50tawi.WithHTTPRequest(r))
+	if err != nil {
+		return bytes.Buffer{}, bytes.Buffer{}, errors.New("Failed to load seal image: " + err.Error())
+	}
+	defer sealImage.Close()
+
+	// Read file into buffer
+	var seal bytes.Buffer
+	if _, err := io.Copy(&seal, sealImage); err != nil {
+		return bytes.Buffer{}, bytes.Buffer{}, errors.New("Failed to read file: " + err.Error())
+	}
+	return sign, seal, nil
 }
 
 // parseTaxInfoFromForm parses complete tax information from multipart form data
