@@ -32,7 +32,6 @@ type TaxInfo struct {
 	Income6_Note string       `json:"income6_note"` // 6. อื่น ๆ (ระบุ)
 
 	Totals          Totals          `json:"totals"`          // รวมเงิน
-	TotalsInWords   string          `json:"totalsInWords"`   // รวมเงิน (ตัวอักษร)
 	OtherPayments   OtherPayments   `json:"otherPayments"`   // จ่ายภาษี
 	WithholdingType WithholdingType `json:"withholdingType"` // ประเภทการหักภาษี
 	Certification   Certification   `json:"certification"`   // การยืนยัน

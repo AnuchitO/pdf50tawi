@@ -32,8 +32,15 @@ func applyTextWatermark(pdfCtx *model.Context, stamp TextStamp) error {
 	return api.WatermarkContext(pdfCtx, nil, wm)
 }
 
+func ifEmpty(s string) string {
+	if s == "" {
+		return " "
+	}
+	return s
+}
+
 func TextWatermark(stamp TextStamp) (*model.Watermark, error) {
-	wm, err := pdfcpu.ParseTextWatermarkDetails(stamp.Text, "", true, 1)
+	wm, err := pdfcpu.ParseTextWatermarkDetails(ifEmpty(stamp.Text), "", true, 1)
 	if err != nil {
 		return nil, err
 	}

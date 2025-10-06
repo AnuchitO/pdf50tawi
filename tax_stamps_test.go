@@ -32,7 +32,6 @@ func sampleTaxInfo() TaxInfo {
 		Income6:              IncomeDetail{DatePaid: "01/15/2568", AmountPaid: "1500.00", TaxWithheld: "150.00"},
 		Income6_Note:         "ใส่หมายเหตุ",
 		Totals:               Totals{TotalAmountPaid: "4500.00", TotalTaxWithheld: "450.00", TotalTaxWithheldInWords: "สี่ร้อยห้าสิบบาทถ้วน"},
-		TotalsInWords:        "สี่ร้อยห้าสิบบาทถ้วน",
 		OtherPayments:        OtherPayments{GovernmentPensionFund: "1", SocialSecurityFund: "2", ProvidentFund: "3"},
 		WithholdingType:      WithholdingType{WithholdingTax: true, Forever: false, OneTime: true, Other: true, OtherDetails: "detail"},
 		Certification:        Certification{DateOfIssuance: DateOfIssuance{Day: "1", Month: "Jan", Year: "2568"}},
@@ -40,27 +39,39 @@ func sampleTaxInfo() TaxInfo {
 }
 
 func TestTextWatermark(t *testing.T) {
-	cfg := TextStamp{Text: "Hello", Dx: 10, Dy: 20, FontSize: 16, FontName: "CustomFont", Position: types.TopLeft}
-	wm, err := TextWatermark(cfg)
-	if err != nil {
-		t.Fatalf("TextWatermark error: %v", err)
-	}
-	if wm.Dx != cfg.Dx || wm.Dy != cfg.Dy || wm.FontSize != cfg.FontSize || wm.FontName != cfg.FontName || wm.Pos != cfg.Position || !wm.ScaleAbs || wm.OnTop != true {
-		t.Fatalf("unexpected watermark fields: %+v", wm)
-	}
-	if wm.FontName != "CustomFont" {
-		t.Fatalf("expected font name CustomFont, got %s", wm.FontName)
-	}
-}
+	t.Run("default font", func(t *testing.T) {
+		wm, err := TextWatermark(TextStamp{Text: "X", FontSize: 12})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if wm.FontName != "THSarabunNew" {
+			t.Fatalf("expected default font THSarabunNew, got %s", wm.FontName)
+		}
+	})
+	t.Run("custom font", func(t *testing.T) {
+		cfg := TextStamp{Text: "Hello", Dx: 10, Dy: 20, FontSize: 16, FontName: "CustomFont", Position: types.TopLeft}
+		wm, err := TextWatermark(cfg)
+		if err != nil {
+			t.Fatalf("TextWatermark error: %v", err)
+		}
+		if wm.Dx != cfg.Dx || wm.Dy != cfg.Dy || wm.FontSize != cfg.FontSize || wm.FontName != cfg.FontName || wm.Pos != cfg.Position || !wm.ScaleAbs || wm.OnTop != true {
+			t.Fatalf("unexpected watermark fields: %+v", wm)
+		}
+		if wm.FontName != "CustomFont" {
+			t.Fatalf("expected font name CustomFont, got %s", wm.FontName)
+		}
+	})
 
-func TestTextWatermark_DefaultFont(t *testing.T) {
-	wm, err := TextWatermark(TextStamp{Text: "X", FontSize: 12})
-	if err != nil {
-		t.Fatal(err)
-	}
-	if wm.FontName != "THSarabunNew" {
-		t.Fatalf("expected default font THSarabunNew, got %s", wm.FontName)
-	}
+	t.Run("empty text should return ' ' one space otherwise it will crash", func(t *testing.T) {
+		wm, err := TextWatermark(TextStamp{Text: "", FontSize: 12})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if wm.TextString != " " {
+			t.Fatalf("expected text ' ', got %s", wm.TextString)
+		}
+	})
+
 }
 
 func TestImageWatermark(t *testing.T) {
