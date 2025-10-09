@@ -25,7 +25,6 @@ func demoUsingTaxInfo() {
 	if err != nil {
 		log.Fatalf("load signature image fail: %s\n", err)
 	}
-	defer sign.Close()
 
 	// demo logo url
 	// taxInfo.Certification.CompanySealImage = pdf50tawi.Image{
@@ -37,7 +36,6 @@ func demoUsingTaxInfo() {
 	if err != nil {
 		log.Fatalf("load company seal image fail: %s\n", err)
 	}
-	defer seal.Close()
 
 	outputFile, err := os.Create("tax50tawi-stamped.pdf")
 	if err != nil {

@@ -41,7 +41,7 @@ func tinyEmptyPNG() []byte {
 // LoadImage loads an image based on its source type
 // For Upload source type, pass WithHTTPRequest(r) option
 // For File and URL source types, no options needed
-func LoadImage(image Image, options ...LoadOption) (io.ReadCloser, error) {
+func LoadImage(image Image, options ...LoadOption) (io.Reader, error) {
 	opts := &loadOptions{}
 	for _, opt := range options {
 		opt(opts)
@@ -58,14 +58,14 @@ func LoadImage(image Image, options ...LoadOption) (io.ReadCloser, error) {
 	case File:
 		return LoadImageFromFile(image.Value)
 	case "":
-		return io.NopCloser(bytes.NewReader(tinyEmptyPNG())), nil
+		return bytes.NewReader(tinyEmptyPNG()), nil
 	default:
 		return nil, fmt.Errorf("LoadImage: unsupported source type: %s", image.SourceType)
 	}
 }
 
 // LoadImageFromFile loads image from file path (no HTTP context needed)
-func LoadImageFromFile(file string) (io.ReadCloser, error) {
+func LoadImageFromFile(file string) (io.Reader, error) {
 	f, err := os.Open(file)
 	if err != nil {
 		return nil, err
@@ -78,12 +78,12 @@ func LoadImageFromFile(file string) (io.ReadCloser, error) {
 		return nil, err
 	}
 
-	return io.NopCloser(bytes.NewReader(buf.Bytes())), nil
+	return bytes.NewReader(buf.Bytes()), nil
 }
 
 // LoadImageFromMultiPartFile loads image from multipart form upload (requires HTTP context)
 // Use this function in web handlers when dealing with file uploads
-func LoadImageFromMultiPartFile(r *http.Request, file string) (io.ReadCloser, error) {
+func LoadImageFromMultiPartFile(r *http.Request, file string) (io.Reader, error) {
 	f, header, err := r.FormFile(file)
 	if err != nil {
 		return nil, err
@@ -100,11 +100,11 @@ func LoadImageFromMultiPartFile(r *http.Request, file string) (io.ReadCloser, er
 		return nil, err
 	}
 
-	return io.NopCloser(bytes.NewReader(buf.Bytes())), nil
+	return bytes.NewReader(buf.Bytes()), nil
 }
 
 // LoadImageFromURL loads image from URL (no HTTP context needed)
-func LoadImageFromURL(url string) (io.ReadCloser, error) {
+func LoadImageFromURL(url string) (io.Reader, error) {
 	resp, err := http.Get(url)
 	if err != nil {
 		return nil, err
@@ -125,5 +125,5 @@ func LoadImageFromURL(url string) (io.ReadCloser, error) {
 		return nil, err
 	}
 
-	return io.NopCloser(bytes.NewReader(buf.Bytes())), nil
+	return bytes.NewReader(buf.Bytes()), nil
 }
