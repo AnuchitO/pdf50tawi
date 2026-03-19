@@ -70,6 +70,10 @@ func stampPDF(textStamps []TextStamp, imageStamps []ImageStamp, out io.Writer) e
 	if err := pdf.AddTTFFontData("THSarabunNew", thSarabunFontData); err != nil {
 		return fmt.Errorf("add Thai font: %w", err)
 	}
+	// Register a system font for checkmarks (✓). THSarabunNew doesn't have U+2713.
+	if err := pdf.AddTTFFont("checkmark", "/Library/Fonts/Arial Unicode.ttf"); err != nil {
+		return fmt.Errorf("add checkmark font: %w", err)
+	}
 
 	tplIdx := pdf.ImportPage(tplPath, 1, "/MediaBox")
 	pdf.AddPage()
@@ -94,9 +98,13 @@ func stampPDF(textStamps []TextStamp, imageStamps []ImageStamp, out io.Writer) e
 func placeText(pdf *gopdf.GoPdf, stamp TextStamp) error {
 	x, y := anchorToXY(stamp.Position, stamp.Dx, stamp.Dy)
 
-	// ✓ is not in THSarabunNew — draw it as vector lines instead.
+	// ✓ is not in THSarabunNew — use system font registered as "checkmark".
 	if stamp.Text == "✓" {
-		return drawCheckmark(pdf, x, y, float64(stamp.FontSize))
+		if err := pdf.SetFont("checkmark", "", float64(stamp.FontSize)); err != nil {
+			return fmt.Errorf("set checkmark font: %w", err)
+		}
+		pdf.SetXY(x, y)
+		return pdf.Text(stamp.Text)
 	}
 
 	if err := pdf.SetFont("THSarabunNew", "", float64(stamp.FontSize)); err != nil {
@@ -121,16 +129,6 @@ func placeText(pdf *gopdf.GoPdf, stamp TextStamp) error {
 	return pdf.Text(stamp.Text)
 }
 
-// drawCheckmark draws a ✓ tick using two vector lines at (x, y) top-left.
-func drawCheckmark(pdf *gopdf.GoPdf, x, y, size float64) error {
-	pdf.SetLineWidth(1.2)
-	pdf.SetStrokeColor(0, 0, 0)
-	// Short left leg: bottom-left to mid-bottom
-	pdf.Line(x, y+size*0.55, x+size*0.35, y+size*0.85)
-	// Long right leg: mid-bottom to top-right
-	pdf.Line(x+size*0.35, y+size*0.85, x+size, y+size*0.2)
-	return nil
-}
 
 func placeImage(pdf *gopdf.GoPdf, stamp ImageStamp, idx int) error {
 	if stamp.Reader == nil {

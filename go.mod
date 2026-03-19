@@ -1,6 +1,6 @@
 module github.com/anuchito/pdf50tawi
 
-go 1.24.1
+go 1.25.0
 
 require (
 	github.com/labstack/echo/v4 v4.13.4
@@ -18,5 +18,5 @@ require (
 	golang.org/x/crypto v0.38.0 // indirect
 	golang.org/x/net v0.40.0 // indirect
 	golang.org/x/sys v0.33.0 // indirect
-	golang.org/x/text v0.25.0 // indirect
+	golang.org/x/text v0.35.0 // indirect
 )
