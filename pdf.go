@@ -92,10 +92,16 @@ func stampPDF(textStamps []TextStamp, imageStamps []ImageStamp, out io.Writer) e
 }
 
 func placeText(pdf *gopdf.GoPdf, stamp TextStamp) error {
+	x, y := anchorToXY(stamp.Position, stamp.Dx, stamp.Dy)
+
+	// ✓ is not in THSarabunNew — draw it as vector lines instead.
+	if stamp.Text == "✓" {
+		return drawCheckmark(pdf, x, y, float64(stamp.FontSize))
+	}
+
 	if err := pdf.SetFont("THSarabunNew", "", float64(stamp.FontSize)); err != nil {
 		return fmt.Errorf("set font: %w", err)
 	}
-	x, y := anchorToXY(stamp.Position, stamp.Dx, stamp.Dy)
 
 	// pdfcpu anchors the text bounding box corner that matches the anchor name.
 	// gopdf.Text() always starts text at the left edge, so we must shift x to
@@ -113,6 +119,17 @@ func placeText(pdf *gopdf.GoPdf, stamp TextStamp) error {
 
 	pdf.SetXY(x, y)
 	return pdf.Text(stamp.Text)
+}
+
+// drawCheckmark draws a ✓ tick using two vector lines at (x, y) top-left.
+func drawCheckmark(pdf *gopdf.GoPdf, x, y, size float64) error {
+	pdf.SetLineWidth(1.2)
+	pdf.SetStrokeColor(0, 0, 0)
+	// Short left leg: bottom-left to mid-bottom
+	pdf.Line(x, y+size*0.55, x+size*0.35, y+size*0.85)
+	// Long right leg: mid-bottom to top-right
+	pdf.Line(x+size*0.35, y+size*0.85, x+size, y+size*0.2)
+	return nil
 }
 
 func placeImage(pdf *gopdf.GoPdf, stamp ImageStamp, idx int) error {
