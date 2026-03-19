@@ -1,3 +1,14 @@
+## 2.6MB -- problem
+
+` pdfcpu optimize -v tax50tawi-stamped.pdf xout.pdf `
+
+Your PDF is bloated due to excessive font embedding, especially:
+THSarabunNew appears over 90 times (!), each time as a separate embedded font object (Fm0.F1 to Fm91.F1).
+Other fonts (AngsanaUPC, CordiaUPC) are also embedded multiple times.
+All fonts are marked as embedded = true, and all use Identity-H, which means no subsetting and full font embedding.
+This duplication drastically inflates the file size, as the same font is stored over and over again — possibly one copy per page.
+
+
 # taxform50tawi
 โปรแกรมสำหรับกรอกข้อมูลและประทับตราลงในไฟล์ PDF แบบฟอร์มหนังสือรับรองการหักภาษี ณ ที่จ่าย (แบบ 50 ทวิ) โดยอัตโนมัติ เหมาะสำหรับธุรกิจและผู้ใช้งานที่ต้องการสร้างเอกสารภาษีที่ถูกต้องครบถ้วน พร้อมรองรับการใช้งานในระบบ CLI และพัฒนาโดยภาษา Go
 
@@ -15,10 +26,10 @@
 
 ## ขนาดรูป (พื้นหลังโปร่งใส png)
 - must be png
-- ลายเซ็นต์ มีขนาดเดียว : 1280x720px 
+- ลายเซ็นต์ มีขนาดเดียว : 1280x720px
 - โลโก้ มีขนาด 2 ขนาด
-    - โลโก้ สี่เหลี่ยมจัตุรัสหรือวงกลม :  1024x1024px 
-    - โลโก้ รูปสี่เหลี่ยมผืนผ้า : 1280x720px 
+    - โลโก้ สี่เหลี่ยมจัตุรัสหรือวงกลม :  1024x1024px
+    - โลโก้ รูปสี่เหลี่ยมผืนผ้า : 1280x720px
 
 ## ปัญหาที่พบ
 - ไม่รองรับ "%" ตัวอักษรในส่วนของ Income40_4B_1_4_Rate

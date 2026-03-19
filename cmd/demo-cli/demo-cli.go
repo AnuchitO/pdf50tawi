@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/anuchito/pdf50tawi"
+	"github.com/pdfcpu/pdfcpu/pkg/api"
 )
 
 func main() {
@@ -45,6 +46,10 @@ func demoUsingTaxInfo() {
 
 	if err := pdf50tawi.IssueWHTCertificatePDF(outputFile, taxInfo, sign, seal); err != nil {
 		log.Fatalf("Error adding image stamp: %v", err)
+	}
+
+	if err := api.OptimizeFile(outputFile.Name(), outputFile.Name(), nil); err != nil {
+		log.Fatalf("Error optimizing PDF: %v", err)
 	}
 
 	fmt.Println("Successfully processed PDF with Thai text stamp look at tax50tawi-stamped.pdf")
