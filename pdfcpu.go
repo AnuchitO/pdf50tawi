@@ -1,124 +1,140 @@
 package pdf50tawi
 
 import (
+	"bytes"
+	"fmt"
+	"image"
+	_ "image/jpeg"
+	_ "image/png"
 	"io"
+	"os"
 
-	"github.com/pdfcpu/pdfcpu/pkg/api"
-	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu"
-
-	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu/color"
-	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu/model"
-	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu/types"
-	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu/validate"
+	"github.com/signintech/gopdf"
 )
 
-func WriteStampedPDF(ctx *model.Context, outputPDF io.Writer) error {
-	return api.WriteContext(ctx, outputPDF)
+const (
+	pageWidth  = 595.28
+	pageHeight = 841.89
+)
+
+// anchorToXY converts a pdfcpu-style anchor+offset to gopdf absolute coordinates.
+// pdfcpu uses PDF standard axes (y up from bottom-left).
+// gopdf uses screen axes (y down from top-left).
+func anchorToXY(anchor Anchor, dx, dy float64) (float64, float64) {
+	switch anchor {
+	case TopLeft:
+		return dx, -dy
+	case TopCenter:
+		return pageWidth/2 + dx, -dy
+	case TopRight:
+		return pageWidth + dx, -dy
+	case BottomLeft:
+		return dx, pageHeight - dy
+	case BottomCenter:
+		return pageWidth/2 + dx, pageHeight - dy
+	case BottomRight:
+		return pageWidth + dx, pageHeight - dy
+	case Center:
+		return pageWidth/2 + dx, pageHeight/2 - dy
+	default:
+		return dx, dy
+	}
 }
 
-// BuildStampedContext // take inputPDF and  return *model.Context
-func BuildStampedContext(textStamps []TextStamp, imageStamps []ImageStamp) (*model.Context, error) {
-	// Ensure fonts are installed before any watermarking occurs
-	if err := InstallFonts(); err != nil {
-		return nil, err
+// stampPDF builds the output PDF by importing the template, then placing all
+// text and image stamps. The Thai font is embedded once with subsetting.
+func stampPDF(textStamps []TextStamp, imageStamps []ImageStamp, out io.Writer) error {
+	tpl, err := Tax50tawiPDFTemplate()
+	if err != nil {
+		return err
+	}
+	tplData, err := io.ReadAll(tpl)
+	if err != nil {
+		return fmt.Errorf("read template: %w", err)
+	}
+	tplFile, err := os.CreateTemp("", "pdf50tawi-tpl-*.pdf")
+	if err != nil {
+		return fmt.Errorf("create temp: %w", err)
+	}
+	tplPath := tplFile.Name()
+	defer os.Remove(tplPath)
+	if _, err := tplFile.Write(tplData); err != nil {
+		tplFile.Close()
+		return fmt.Errorf("write temp template: %w", err)
+	}
+	tplFile.Close()
+
+	pdf := gopdf.GoPdf{}
+	pdf.Start(gopdf.Config{PageSize: gopdf.Rect{W: pageWidth, H: pageHeight}})
+
+	if err := pdf.AddTTFFontData("THSarabunNew", thSarabunFontData); err != nil {
+		return fmt.Errorf("add Thai font: %w", err)
 	}
 
-	template, err := Tax50tawiPDFTemplate()
-	if err != nil {
-		return nil, err
-	}
+	tplIdx := pdf.ImportPage(tplPath, 1, "/MediaBox")
+	pdf.AddPage()
+	pdf.UseImportedTemplate(tplIdx, 0, 0, pageWidth, pageHeight)
 
-	ctx, err := ReadContext(template)
-	if err != nil {
-		return nil, err
+	for i, img := range imageStamps {
+		if err := placeImage(&pdf, img, i); err != nil {
+			return err
+		}
 	}
 
 	for _, stamp := range textStamps {
-		if err := applyTextWatermark(ctx, stamp); err != nil {
-			return nil, err
+		if err := placeText(&pdf, stamp); err != nil {
+			return err
 		}
 	}
 
-	for _, stamp := range imageStamps {
-		if err := applyImageWatermark(ctx, stamp); err != nil {
-			return nil, err
-		}
-	}
-
-	return ctx, nil
+	_, err = pdf.WriteTo(out)
+	return err
 }
 
-// applyTextWatermark applies a text watermark with the given configuration
-func applyTextWatermark(pdfCtx *model.Context, stamp TextStamp) error {
-	wm, err := TextWatermark(stamp)
-	if err != nil {
-		return err
+func placeText(pdf *gopdf.GoPdf, stamp TextStamp) error {
+	if err := pdf.SetFont("THSarabunNew", "", float64(stamp.FontSize)); err != nil {
+		return fmt.Errorf("set font: %w", err)
 	}
-	return api.WatermarkContext(pdfCtx, nil, wm)
+	x, y := anchorToXY(stamp.Position, stamp.Dx, stamp.Dy)
+	pdf.SetXY(x, y)
+	return pdf.Text(stamp.Text)
 }
 
-func TextWatermark(stamp TextStamp) (*model.Watermark, error) {
-	wm, err := pdfcpu.ParseTextWatermarkDetails(ifEmpty(stamp.Text), "", true, 1)
-	if err != nil {
-		return nil, err
+func placeImage(pdf *gopdf.GoPdf, stamp ImageStamp, idx int) error {
+	if stamp.Reader == nil {
+		return nil
 	}
-
-	font := "THSarabunNew"
-	if stamp.FontName != "" {
-		font = stamp.FontName
-	}
-
-	wm.FillColor = color.Black
-	wm.Dy = stamp.Dy
-	wm.Dx = stamp.Dx
-	wm.Diagonal = 0
-	wm.Rotation = 0
-	wm.Scale = 1
-	wm.ScaleAbs = true
-	wm.FontName = font
-	wm.FontSize = stamp.FontSize
-	wm.OnTop = true
-	wm.Pos = stamp.Position
-
-	return wm, nil
-}
-
-func applyImageWatermark(pdfCtx *model.Context, stamp ImageStamp) error {
-	wm, err := ImageWatermark(stamp)
+	data, err := io.ReadAll(stamp.Reader)
 	if err != nil {
 		return err
 	}
 
-	return api.WatermarkContext(pdfCtx, nil, wm)
-}
+	cfg, _, err := image.DecodeConfig(bytes.NewReader(data))
+	if err != nil || cfg.Width == 0 {
+		return nil // skip invalid/empty images
+	}
 
-// Stamp Image take reader
-func ImageWatermark(stamp ImageStamp) (*model.Watermark, error) {
-	wm, err := api.ImageWatermarkForReader(stamp.Reader, "", true, false, types.POINTS)
+	w := pageWidth * stamp.Scale
+	h := w * float64(cfg.Height) / float64(cfg.Width)
+	x, y := anchorToXY(stamp.Pos, stamp.Dx, stamp.Dy)
+
+	ext := ".png"
+	if len(data) > 2 && data[0] == 0xFF && data[1] == 0xD8 {
+		ext = ".jpg"
+	}
+
+	tmp, err := os.CreateTemp("", fmt.Sprintf("pdf-img%d-*%s", idx, ext))
 	if err != nil {
-		return nil, err
+		return err
 	}
-	wm.Dy = stamp.Dy
-	wm.Dx = stamp.Dx
-	wm.Scale = stamp.Scale
-	wm.ScaleAbs = true
-	wm.Opacity = stamp.Opacity
-	wm.Diagonal = stamp.Diagonal
-	wm.Rotation = 0
-	wm.OnTop = stamp.OnTop
-	wm.Pos = stamp.Pos
-	return wm, nil
-}
+	imgPath := tmp.Name()
+	defer os.Remove(imgPath)
 
-func ReadContext(inFile io.ReadSeeker) (*model.Context, error) {
-	ctx, err := api.ReadContext(inFile, model.NewDefaultConfiguration())
-	if err != nil {
-		return nil, err
+	if _, err := tmp.Write(data); err != nil {
+		tmp.Close()
+		return err
 	}
+	tmp.Close()
 
-	if ctx.Conf.Version != model.VersionStr {
-		model.CheckConfigVersion(ctx.Conf.Version)
-	}
-
-	return ctx, validate.XRefTable(ctx)
+	return pdf.Image(imgPath, x, y, &gopdf.Rect{W: w, H: h})
 }

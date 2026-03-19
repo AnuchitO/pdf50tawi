@@ -2,101 +2,71 @@ package pdf50tawi
 
 import (
 	"bytes"
-	"io"
 	"testing"
-
-	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu/types"
 )
 
-func TestBuildWriteAndWHTCertificatePDF(t *testing.T) {
+func TestIssueWHTCertificatePDF(t *testing.T) {
 	png := tinyEmptyPNG()
-	// BuildStampedContext
-	texts := []TextStamp{{Text: "t", Dx: 10, Dy: -10, FontSize: 12, Position: types.TopLeft}}
-	images := []ImageStamp{{Reader: bytes.NewReader(png), Pos: types.BottomLeft, Dx: 5, Dy: 5, Scale: 0.1, Opacity: 1, OnTop: true}}
-	ctx, err := BuildStampedContext(texts, images)
-	if err != nil || ctx == nil {
-		t.Fatalf("BuildStampedContext error: %v", err)
-	}
-	// WriteStampedPDF
 	var out bytes.Buffer
-	if err := WriteStampedPDF(ctx, &out); err != nil {
-		t.Fatalf("WriteStampedPDF error: %v", err)
+	err := IssueWHTCertificatePDF(&out, sampleTaxInfo(), bytes.NewReader(png), bytes.NewReader(png))
+	if err != nil {
+		t.Fatalf("IssueWHTCertificatePDF error: %v", err)
 	}
 	if out.Len() == 0 {
-		t.Fatalf("expected output PDF bytes")
+		t.Fatal("expected non-empty PDF output")
 	}
-	// WHTCertificatePDF using embedded template
-	var out2 bytes.Buffer
-	if err := IssueWHTCertificatePDF(&out2, sampleTaxInfo(), bytes.NewReader(png), bytes.NewReader(png)); err != nil {
-		t.Fatalf("WHTCertificatePDF error: %v", err)
+	// Valid PDF starts with %PDF
+	if !bytes.HasPrefix(out.Bytes(), []byte("%PDF")) {
+		t.Fatalf("output does not look like a PDF (first bytes: %q)", out.Bytes()[:min(8, out.Len())])
 	}
-	if out2.Len() == 0 {
-		t.Fatalf("expected output bytes for WHTCertificatePDF")
-	}
-}
-
-func TestTextWatermark(t *testing.T) {
-	t.Run("default font", func(t *testing.T) {
-		wm, err := TextWatermark(TextStamp{Text: "X", FontSize: 12})
-		if err != nil {
-			t.Fatal(err)
-		}
-		if wm.FontName != "THSarabunNew" {
-			t.Fatalf("expected default font THSarabunNew, got %s", wm.FontName)
-		}
-	})
-	t.Run("custom font", func(t *testing.T) {
-		cfg := TextStamp{Text: "Hello", Dx: 10, Dy: 20, FontSize: 16, FontName: "CustomFont", Position: types.TopLeft}
-		wm, err := TextWatermark(cfg)
-		if err != nil {
-			t.Fatalf("TextWatermark error: %v", err)
-		}
-		if wm.Dx != cfg.Dx || wm.Dy != cfg.Dy || wm.FontSize != cfg.FontSize || wm.FontName != cfg.FontName || wm.Pos != cfg.Position || !wm.ScaleAbs || wm.OnTop != true {
-			t.Fatalf("unexpected watermark fields: %+v", wm)
-		}
-		if wm.FontName != "CustomFont" {
-			t.Fatalf("expected font name CustomFont, got %s", wm.FontName)
-		}
-	})
-
-	t.Run("empty text should return ' ' one space otherwise it will crash", func(t *testing.T) {
-		wm, err := TextWatermark(TextStamp{Text: "", FontSize: 12})
-		if err != nil {
-			t.Fatal(err)
-		}
-		if wm.TextString != " " {
-			t.Fatalf("expected text ' ', got %s", wm.TextString)
-		}
-	})
-
-}
-
-func TestImageWatermark(t *testing.T) {
-	img := tinyEmptyPNG()
-	wm, err := ImageWatermark(ImageStamp{Reader: bytes.NewReader(img), Pos: types.BottomRight, Dx: 3, Dy: 4, Scale: 0.5, Opacity: 0.8, OnTop: true})
-	if err != nil {
-		t.Fatalf("ImageWatermark error: %v", err)
-	}
-	if wm.Dx != 3 || wm.Dy != 4 || wm.Scale != 0.5 || !wm.ScaleAbs || wm.Opacity != 0.8 || wm.Pos != types.BottomRight || wm.OnTop != true {
-		t.Fatalf("unexpected image watermark fields: %+v", wm)
+	// Should be well under 1MB
+	if out.Len() > 1024*1024 {
+		t.Fatalf("output too large: %d bytes (expected < 1MB)", out.Len())
 	}
 }
 
-func mustPDFTemplate(t *testing.T) io.ReadSeeker {
-	t.Helper()
-	r, err := Tax50tawiPDFTemplate()
-	if err != nil {
-		t.Fatalf("Tax50tawiPDFTemplate error: %v", err)
+func TestStampPDFWithEmptyStamps(t *testing.T) {
+	var out bytes.Buffer
+	if err := stampPDF(nil, nil, &out); err != nil {
+		t.Fatalf("stampPDF error: %v", err)
 	}
-	return r
+	if !bytes.HasPrefix(out.Bytes(), []byte("%PDF")) {
+		t.Fatal("output does not look like a PDF")
+	}
 }
 
-func TestReadContext(t *testing.T) {
-	ctx, err := ReadContext(mustPDFTemplate(t))
-	if err != nil || ctx == nil {
-		t.Fatalf("ReadContext failed: %v, ctx=%v", err, ctx)
+func TestAnchorToXY(t *testing.T) {
+	cases := []struct {
+		anchor    Anchor
+		dx, dy    float64
+		wantX, wantY float64
+	}{
+		{TopLeft, 58, -98, 58, 98},
+		{TopCenter, 0, -50, pageWidth / 2, 50},
+		{BottomRight, -109.5, 530, pageWidth - 109.5, pageHeight - 530},
+		{BottomCenter, 69, 530, pageWidth/2 + 69, pageHeight - 530},
+		{BottomLeft, 10, 20, 10, pageHeight - 20},
+		{Center, 0, 0, pageWidth / 2, pageHeight / 2},
 	}
-	if ctx.Conf == nil {
-		t.Fatalf("expected configuration present")
+	for _, c := range cases {
+		x, y := anchorToXY(c.anchor, c.dx, c.dy)
+		if abs(x-c.wantX) > 0.01 || abs(y-c.wantY) > 0.01 {
+			t.Errorf("anchorToXY(%v, %v, %v) = (%v, %v), want (%v, %v)",
+				c.anchor, c.dx, c.dy, x, y, c.wantX, c.wantY)
+		}
 	}
+}
+
+func abs(f float64) float64 {
+	if f < 0 {
+		return -f
+	}
+	return f
+}
+
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
 }

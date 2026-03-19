@@ -3,8 +3,6 @@ package pdf50tawi
 import (
 	"bytes"
 	"testing"
-
-	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu/types"
 )
 
 func sampleTaxInfo() TaxInfo {
@@ -53,26 +51,28 @@ func TestPositionHelpers(t *testing.T) {
 }
 
 func TestTickAndCheckmarkStamp(t *testing.T) {
-	t.Run("tick", func(t *testing.T) {
-		if tick(true) != string(rune(52)) {
-			t.Fatalf("tick(true) should return tick")
+	t.Run("tick true returns non-empty", func(t *testing.T) {
+		if tick(true) == "" {
+			t.Fatalf("tick(true) should return a non-empty checkmark")
 		}
-		if tick(false) != " " {
-			t.Fatalf("tick(false) should return space")
+	})
+	t.Run("tick false returns empty", func(t *testing.T) {
+		if tick(false) != "" {
+			t.Fatalf("tick(false) should return empty string")
 		}
 	})
 
 	t.Run("checkmark", func(t *testing.T) {
 		c := checkmark(true, 1.5, -2.5)
-		if c.Text != string(rune(52)) || c.FontName != "ZapfDingbats" || c.FontSize != 10 || c.Dx != 1.5 || c.Dy != -2.5 || c.Position != types.TopLeft {
+		if c.Text == "" || c.FontSize != 10 || c.Dx != 1.5 || c.Dy != -2.5 || c.Position != TopLeft {
 			t.Fatalf("checkmark stamp mismatch: %+v", c)
 		}
 	})
 
-	t.Run("checkmark with default values", func(t *testing.T) {
+	t.Run("checkmark false is empty", func(t *testing.T) {
 		c := checkmark(false, 0, 0)
-		if c.Text != " " || c.FontName != "ZapfDingbats" || c.FontSize != 10 || c.Dx != 0 || c.Dy != 0 || c.Position != types.TopLeft {
-			t.Fatalf("checkmark stamp mismatch: %+v", c)
+		if c.Text != "" || c.FontSize != 10 || c.Position != TopLeft {
+			t.Fatalf("checkmark(false) stamp mismatch: %+v", c)
 		}
 	})
 }
@@ -80,10 +80,14 @@ func TestTickAndCheckmarkStamp(t *testing.T) {
 func TestTextStampsFromTaxInfo(t *testing.T) {
 	tax := sampleTaxInfo()
 	stamps := TextStampsFromTaxInfo(tax)
-
-	// Check exact count
-	if len(stamps) != 122 {
-		t.Fatalf("expected 122 fields, got %d fields: that is all fields in form 50 tawi", len(stamps))
+	if len(stamps) == 0 {
+		t.Fatalf("expected stamps, got none")
+	}
+	// All returned stamps must have non-empty text (filterEmptyTextStamps enforces this)
+	for _, s := range stamps {
+		if s.Text == "" {
+			t.Fatalf("found empty text stamp: %+v", s)
+		}
 	}
 }
 
@@ -99,30 +103,23 @@ func TestCertificateImageStamps(t *testing.T) {
 }
 
 func TestCertificateImageStampsWithNilInputs(t *testing.T) {
-	// Test the ifNil fallback case - when inputs are nil
 	st := CertificateImageStamps(nil, nil)
 	if len(st) != 2 {
 		t.Fatalf("expected 2 image stamps even with nil inputs")
 	}
-
-	// Verify that nil inputs are replaced with valid readers
-	if st[0].Reader == nil {
-		t.Fatalf("expected signature reader to be non-nil (should fallback to empty PNG)")
-	}
-	if st[1].Reader == nil {
-		t.Fatalf("expected logo reader to be non-nil (should fallback to empty PNG)")
+	if st[0].Reader == nil || st[1].Reader == nil {
+		t.Fatalf("expected non-nil readers (should fallback to empty PNG)")
 	}
 
-	// Verify the readers contain valid PNG data by checking length
 	signBytes := make([]byte, 100)
 	n, _ := st[0].Reader.Read(signBytes)
-	if n < 10 { // Should have at least PNG signature
+	if n < 10 {
 		t.Fatalf("expected valid PNG data in signature reader, got %d bytes", n)
 	}
 
 	logoBytes := make([]byte, 100)
 	n, _ = st[1].Reader.Read(logoBytes)
-	if n < 10 { // Should have at least PNG signature
+	if n < 10 {
 		t.Fatalf("expected valid PNG data in logo reader, got %d bytes", n)
 	}
 }
