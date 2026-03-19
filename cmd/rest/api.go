@@ -81,8 +81,6 @@ func loadImages(cert pdf50tawi.Certification, r *http.Request) (bytes.Buffer, by
 	if err != nil {
 		return bytes.Buffer{}, bytes.Buffer{}, errors.New("Failed to load signature image: " + err.Error())
 	}
-	defer signImage.Close()
-
 	// Read file into buffer
 	var sign bytes.Buffer
 	if _, err := io.Copy(&sign, signImage); err != nil {
@@ -94,7 +92,6 @@ func loadImages(cert pdf50tawi.Certification, r *http.Request) (bytes.Buffer, by
 	if err != nil {
 		return bytes.Buffer{}, bytes.Buffer{}, errors.New("Failed to load seal image: " + err.Error())
 	}
-	defer sealImage.Close()
 
 	// Read file into buffer
 	var seal bytes.Buffer
