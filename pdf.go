@@ -96,6 +96,21 @@ func placeText(pdf *gopdf.GoPdf, stamp TextStamp) error {
 		return fmt.Errorf("set font: %w", err)
 	}
 	x, y := anchorToXY(stamp.Position, stamp.Dx, stamp.Dy)
+
+	// pdfcpu anchors the text bounding box corner that matches the anchor name.
+	// gopdf.Text() always starts text at the left edge, so we must shift x to
+	// replicate right-align (BottomRight/TopRight/Right) and center (XCenter).
+	switch stamp.Position {
+	case TopCenter, BottomCenter, Center:
+		if w, err := pdf.MeasureTextWidth(stamp.Text); err == nil {
+			x -= w / 2
+		}
+	case TopRight, BottomRight, Right:
+		if w, err := pdf.MeasureTextWidth(stamp.Text); err == nil {
+			x -= w
+		}
+	}
+
 	pdf.SetXY(x, y)
 	return pdf.Text(stamp.Text)
 }
