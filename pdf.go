@@ -123,27 +123,42 @@ func placeText(pdf *gopdf.GoPdf, stamp TextStamp) error {
 }
 
 
-// drawCheckmark draws a filled ✓ polygon at (x,y) fitting within a `size`×`size` box.
-// Uses two strokes (left short leg, right long leg) with perpendicular offsets so the
-// filled shape has clean, sharp miter corners — no line-cap artifacts.
+// drawCheckmark draws a filled ✓ at (x,y) with rounded caps at both tips.
+// The shape is a 12-point polygon: 5 points per rounded cap + 1 point per valley side.
+//
+// Geometry (all coords in gopdf screen space, y↓):
+//
+//	P1 = left arm tip  (0.12s, 0.48s)
+//	P2 = valley        (0.33s, 0.85s)
+//	P3 = right arm tip (0.98s, 0.05s)
+//
+// Left arm dir  ≈ (0.560, 0.829)  inner-perp=(0.829,−0.560)  outer-perp=(−0.829, 0.560)
+// Right arm dir ≈ (0.631,−0.776)  inner-perp=(−0.776,−0.631) outer-perp=( 0.776, 0.631)
+// Valley bisector outer ≈ (0,+1), inner ≈ (0,−1).
 func drawCheckmark(pdf *gopdf.GoPdf, x, y, size float64) error {
-	h := size * 0.10 // half stroke thickness (~20% of size total)
+	h := size * 0.12
 
-	// Left leg:  P1=(0, 0.45·s) → P2=(0.32·s, 0.85·s)
-	//   outer normal = (-0.781, 0.625)  inner normal = (0.781, -0.625)
-	// Right leg: P2=(0.32·s, 0.85·s) → P3=(1.0·s, 0.10·s)
-	//   outer normal = (0.741, 0.672)   inner normal = (-0.741, -0.672)
-	// Valley bisector outer ≈ (−0.031, 0.999) ≈ (0, +1) — nearly straight down.
+	p1x, p1y := x+0.12*size, y+0.48*size
+	p2x, p2y := x+0.33*size, y+0.85*size
+	p3x, p3y := x+0.98*size, y+0.05*size
 
 	points := []gopdf.Point{
-		// --- outer boundary (clockwise) ---
-		{X: x - 0.781*h, Y: y + 0.45*size + 0.625*h}, // P1 outer-left corner
-		{X: x + 0.32*size, Y: y + 0.85*size + h},      // P2 valley outer (below)
-		{X: x + size + 0.741*h, Y: y + 0.1*size + 0.672*h}, // P3 outer-lower corner
-		// --- inner boundary (counter-clockwise back) ---
-		{X: x + size - 0.741*h, Y: y + 0.1*size - 0.672*h}, // P3 inner-upper corner
-		{X: x + 0.32*size, Y: y + 0.85*size - h},            // P2 valley inner (above)
-		{X: x + 0.781*h, Y: y + 0.45*size - 0.625*h},        // P1 inner-right corner
+		// — Left arm rounded cap (5 pts, inner → tip → outer) —
+		{X: p1x + 0.829*h, Y: p1y - 0.560*h}, // inner edge
+		{X: p1x + 0.190*h, Y: p1y - 0.982*h}, // 45° toward tip
+		{X: p1x - 0.560*h, Y: p1y - 0.829*h}, // cap tip
+		{X: p1x - 0.982*h, Y: p1y - 0.190*h}, // 45° toward outer
+		{X: p1x - 0.829*h, Y: p1y + 0.560*h}, // outer edge
+		// — Valley outer (bottom of valley) —
+		{X: p2x, Y: p2y + h},
+		// — Right arm rounded cap (5 pts, outer → tip → inner) —
+		{X: p3x + 0.776*h, Y: p3y + 0.631*h}, // outer edge
+		{X: p3x + 0.994*h, Y: p3y - 0.103*h}, // 45° toward tip
+		{X: p3x + 0.631*h, Y: p3y - 0.776*h}, // cap tip
+		{X: p3x - 0.103*h, Y: p3y - 0.994*h}, // 45° toward inner
+		{X: p3x - 0.776*h, Y: p3y - 0.631*h}, // inner edge
+		// — Valley inner (top of valley) —
+		{X: p2x, Y: p2y - h},
 	}
 
 	pdf.SetFillColor(0, 0, 0)
