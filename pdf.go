@@ -7,6 +7,7 @@ import (
 	_ "image/jpeg"
 	_ "image/png"
 	"io"
+	"math"
 	"os"
 
 	"github.com/signintech/gopdf"
@@ -123,46 +124,79 @@ func placeText(pdf *gopdf.GoPdf, stamp TextStamp) error {
 }
 
 
-// drawCheckmark draws a filled ✓ at (x,y) with rounded caps at both tips.
-// The shape is a 12-point polygon: 5 points per rounded cap + 1 point per valley side.
+// drawCheckmark draws a professional-quality filled ✓ using variable-width stroke expansion.
 //
-// Geometry (all coords in gopdf screen space, y↓):
+// Design (font-designer approach):
+//   - Center line: straight left arm + cubic Bézier right arm (smooth sweep).
+//   - Stroke width tapers from hMin at tips to hMax at valley (calligraphic weight).
+//   - Outline = N sampled perpendicular offsets → dense polygon → smooth curves, no artifacts.
 //
-//	P1 = left arm tip  (0.12s, 0.48s)
-//	P2 = valley        (0.33s, 0.85s)
-//	P3 = right arm tip (0.98s, 0.05s)
-//
-// Left arm dir  ≈ (0.560, 0.829)  inner-perp=(0.829,−0.560)  outer-perp=(−0.829, 0.560)
-// Right arm dir ≈ (0.631,−0.776)  inner-perp=(−0.776,−0.631) outer-perp=( 0.776, 0.631)
-// Valley bisector outer ≈ (0,+1), inner ≈ (0,−1).
+// Coordinate space: gopdf screen (y↓).
 func drawCheckmark(pdf *gopdf.GoPdf, x, y, size float64) error {
-	h := size * 0.12
+	const N = 16             // samples per arm; higher = smoother
+	hMax := size * 0.115    // half-width at valley (thickest point)
+	hMin := size * 0.028    // half-width at tips   (tapered to near-zero)
 
-	p1x, p1y := x+0.12*size, y+0.48*size
-	p2x, p2y := x+0.33*size, y+0.85*size
-	p3x, p3y := x+0.98*size, y+0.05*size
+	// ── Center-line key points ──────────────────────────────────────────────
+	// Left arm:  straight  P0 → P1
+	p0x, p0y := x+0.10*size, y+0.50*size // left tip
+	p1x, p1y := x+0.32*size, y+0.82*size // valley
 
-	points := []gopdf.Point{
-		// — Left arm rounded cap (5 pts, inner → tip → outer) —
-		{X: p1x + 0.829*h, Y: p1y - 0.560*h}, // inner edge
-		{X: p1x + 0.190*h, Y: p1y - 0.982*h}, // 45° toward tip
-		{X: p1x - 0.560*h, Y: p1y - 0.829*h}, // cap tip
-		{X: p1x - 0.982*h, Y: p1y - 0.190*h}, // 45° toward outer
-		{X: p1x - 0.829*h, Y: p1y + 0.560*h}, // outer edge
-		// — Valley outer (bottom of valley) —
-		{X: p2x, Y: p2y + h},
-		// — Right arm rounded cap (5 pts, outer → tip → inner) —
-		{X: p3x + 0.776*h, Y: p3y + 0.631*h}, // outer edge
-		{X: p3x + 0.994*h, Y: p3y - 0.103*h}, // 45° toward tip
-		{X: p3x + 0.631*h, Y: p3y - 0.776*h}, // cap tip
-		{X: p3x - 0.103*h, Y: p3y - 0.994*h}, // 45° toward inner
-		{X: p3x - 0.776*h, Y: p3y - 0.631*h}, // inner edge
-		// — Valley inner (top of valley) —
-		{X: p2x, Y: p2y - h},
+	// Right arm: cubic Bézier  P1 → C1 → C2 → P2
+	// C1 directly right of valley so the arm starts horizontally (smooth join).
+	c1x, c1y := x+0.46*size, y+0.82*size // ctrl-1: horizontal start
+	c2x, c2y := x+0.76*size, y+0.22*size // ctrl-2: pulls toward tip
+	p2x, p2y := x+0.96*size, y+0.07*size // right tip
+
+	// ── Helpers ──────────────────────────────────────────────────────────────
+	// For tangent (dx,dy), CCW perp = outer boundary, CW perp = inner boundary.
+	outer := make([]gopdf.Point, 0, N*2+4)
+	inner := make([]gopdf.Point, 0, N*2+4)
+
+	addSample := func(px, py, dx, dy, h float64) {
+		// normalize tangent
+		l := math.Sqrt(dx*dx + dy*dy)
+		if l < 1e-9 {
+			return
+		}
+		dx /= l
+		dy /= l
+		// outer = CCW perp (-dy, dx); inner = CW perp (dy, -dx)
+		outer = append(outer, gopdf.Point{X: px - dy*h, Y: py + dx*h})
+		inner = append(inner, gopdf.Point{X: px + dy*h, Y: py - dx*h})
+	}
+
+	// ── Left arm (straight, t: 0=tip → 1=valley) ────────────────────────────
+	ldx, ldy := p1x-p0x, p1y-p0y
+	for i := 0; i <= N; i++ {
+		t := float64(i) / float64(N)
+		h := hMin + t*(hMax-hMin)
+		addSample(p0x+t*ldx, p0y+t*ldy, ldx, ldy, h)
+	}
+
+	// ── Right arm (Bézier, t: 0=valley → 1=tip) ─────────────────────────────
+	for i := 1; i <= N; i++ {
+		t := float64(i) / float64(N)
+		u := 1 - t
+		// point on cubic Bézier
+		px := u*u*u*p1x + 3*u*u*t*c1x + 3*u*t*t*c2x + t*t*t*p2x
+		py := u*u*u*p1y + 3*u*u*t*c1y + 3*u*t*t*c2y + t*t*t*p2y
+		// tangent (derivative)
+		tdx := 3 * (u*u*(c1x-p1x) + 2*u*t*(c2x-c1x) + t*t*(p2x-c2x))
+		tdy := 3 * (u*u*(c1y-p1y) + 2*u*t*(c2y-c1y) + t*t*(p2y-c2y))
+		h := hMax + t*(hMin-hMax) // thick→thin
+		addSample(px, py, tdx, tdy, h)
+	}
+
+	// ── Build polygon: outer forward + inner reversed ─────────────────────────
+	pts := make([]gopdf.Point, 0, len(outer)+len(inner))
+	pts = append(pts, outer...)
+	for i := len(inner) - 1; i >= 0; i-- {
+		pts = append(pts, inner[i])
 	}
 
 	pdf.SetFillColor(0, 0, 0)
-	pdf.Polygon(points, "F")
+	pdf.Polygon(pts, "F")
 	return nil
 }
 
