@@ -135,7 +135,7 @@ func placeText(pdf *gopdf.GoPdf, stamp TextStamp) error {
 func drawCheckmark(pdf *gopdf.GoPdf, x, y, size float64) error {
 	const N = 28  // samples per arm
 	const C = 16  // semicircle cap divisions (180/16 ≈ 11° per step = smooth)
-	h := size * 0.170 // half stroke width
+	h := size * 0.125 // half stroke width
 
 	// ── Center line ─────────────────────────────────────────────────────────
 	// Geometry matched to reference: shorter left arm (tip is lower on page),
