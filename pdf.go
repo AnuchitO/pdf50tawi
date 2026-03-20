@@ -71,9 +71,6 @@ func stampPDF(textStamps []TextStamp, imageStamps []ImageStamp, out io.Writer) e
 		return fmt.Errorf("add Thai font: %w", err)
 	}
 	// Register a system font for checkmarks (✓). THSarabunNew doesn't have U+2713.
-	if err := pdf.AddTTFFont("checkmark", "/Library/Fonts/Arial Unicode.ttf"); err != nil {
-		return fmt.Errorf("add checkmark font: %w", err)
-	}
 
 	tplIdx := pdf.ImportPage(tplPath, 1, "/MediaBox")
 	pdf.AddPage()
@@ -98,13 +95,9 @@ func stampPDF(textStamps []TextStamp, imageStamps []ImageStamp, out io.Writer) e
 func placeText(pdf *gopdf.GoPdf, stamp TextStamp) error {
 	x, y := anchorToXY(stamp.Position, stamp.Dx, stamp.Dy)
 
-	// ✓ is not in THSarabunNew — use system font registered as "checkmark".
+	// ✓ has no glyph in THSarabunNew — draw as a filled vector polygon instead.
 	if stamp.Text == "✓" {
-		if err := pdf.SetFont("checkmark", "", float64(stamp.FontSize)); err != nil {
-			return fmt.Errorf("set checkmark font: %w", err)
-		}
-		pdf.SetXY(x, y)
-		return pdf.Text(stamp.Text)
+		return drawCheckmark(pdf, x, y, float64(stamp.FontSize))
 	}
 
 	if err := pdf.SetFont("THSarabunNew", "", float64(stamp.FontSize)); err != nil {
@@ -129,6 +122,34 @@ func placeText(pdf *gopdf.GoPdf, stamp TextStamp) error {
 	return pdf.Text(stamp.Text)
 }
 
+
+// drawCheckmark draws a filled ✓ polygon at (x,y) fitting within a `size`×`size` box.
+// Uses two strokes (left short leg, right long leg) with perpendicular offsets so the
+// filled shape has clean, sharp miter corners — no line-cap artifacts.
+func drawCheckmark(pdf *gopdf.GoPdf, x, y, size float64) error {
+	h := size * 0.10 // half stroke thickness (~20% of size total)
+
+	// Left leg:  P1=(0, 0.45·s) → P2=(0.32·s, 0.85·s)
+	//   outer normal = (-0.781, 0.625)  inner normal = (0.781, -0.625)
+	// Right leg: P2=(0.32·s, 0.85·s) → P3=(1.0·s, 0.10·s)
+	//   outer normal = (0.741, 0.672)   inner normal = (-0.741, -0.672)
+	// Valley bisector outer ≈ (−0.031, 0.999) ≈ (0, +1) — nearly straight down.
+
+	points := []gopdf.Point{
+		// --- outer boundary (clockwise) ---
+		{X: x - 0.781*h, Y: y + 0.45*size + 0.625*h}, // P1 outer-left corner
+		{X: x + 0.32*size, Y: y + 0.85*size + h},      // P2 valley outer (below)
+		{X: x + size + 0.741*h, Y: y + 0.1*size + 0.672*h}, // P3 outer-lower corner
+		// --- inner boundary (counter-clockwise back) ---
+		{X: x + size - 0.741*h, Y: y + 0.1*size - 0.672*h}, // P3 inner-upper corner
+		{X: x + 0.32*size, Y: y + 0.85*size - h},            // P2 valley inner (above)
+		{X: x + 0.781*h, Y: y + 0.45*size - 0.625*h},        // P1 inner-right corner
+	}
+
+	pdf.SetFillColor(0, 0, 0)
+	pdf.Polygon(points, "F")
+	return nil
+}
 
 func placeImage(pdf *gopdf.GoPdf, stamp ImageStamp, idx int) error {
 	if stamp.Reader == nil {
