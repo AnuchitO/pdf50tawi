@@ -124,79 +124,119 @@ func placeText(pdf *gopdf.GoPdf, stamp TextStamp) error {
 }
 
 
-// drawCheckmark draws a professional-quality filled ✓ using variable-width stroke expansion.
+// drawCheckmark draws a bold ✓ matching the reference style:
+// thick uniform stroke, large rounded caps at both tips, smooth rounded valley.
 //
-// Design (font-designer approach):
-//   - Center line: straight left arm + cubic Bézier right arm (smooth sweep).
-//   - Stroke width tapers from hMin at tips to hMax at valley (calligraphic weight).
-//   - Outline = N sampled perpendicular offsets → dense polygon → smooth curves, no artifacts.
+// The full outline is built in one clockwise pass:
 //
-// Coordinate space: gopdf screen (y↓).
+//	left-arm-outer → valley-outer → right-arm-outer →
+//	right-cap → right-arm-inner → valley-inner-arc →
+//	left-arm-inner → left-cap → (close)
 func drawCheckmark(pdf *gopdf.GoPdf, x, y, size float64) error {
-	const N = 16             // samples per arm; higher = smoother
-	hMax := size * 0.115    // half-width at valley (thickest point)
-	hMin := size * 0.028    // half-width at tips   (tapered to near-zero)
+	const N = 14           // samples per arm
+	h := size * 0.155      // half stroke width (bold, uniform)
 
-	// ── Center-line key points ──────────────────────────────────────────────
-	// Left arm:  straight  P0 → P1
-	p0x, p0y := x+0.10*size, y+0.50*size // left tip
-	p1x, p1y := x+0.32*size, y+0.82*size // valley
+	// ── Center line ─────────────────────────────────────────────────────────
+	p0x, p0y := x+0.12*size, y+0.44*size // left tip
+	p1x, p1y := x+0.32*size, y+0.80*size // valley
+	c1x, c1y := x+0.47*size, y+0.80*size // Bézier ctrl1: horizontal departure
+	c2x, c2y := x+0.74*size, y+0.18*size // Bézier ctrl2
+	p2x, p2y := x+0.95*size, y+0.06*size // right tip
 
-	// Right arm: cubic Bézier  P1 → C1 → C2 → P2
-	// C1 directly right of valley so the arm starts horizontally (smooth join).
-	c1x, c1y := x+0.46*size, y+0.82*size // ctrl-1: horizontal start
-	c2x, c2y := x+0.76*size, y+0.22*size // ctrl-2: pulls toward tip
-	p2x, p2y := x+0.96*size, y+0.07*size // right tip
-
-	// ── Helpers ──────────────────────────────────────────────────────────────
-	// For tangent (dx,dy), CCW perp = outer boundary, CW perp = inner boundary.
-	outer := make([]gopdf.Point, 0, N*2+4)
-	inner := make([]gopdf.Point, 0, N*2+4)
-
-	addSample := func(px, py, dx, dy, h float64) {
-		// normalize tangent
-		l := math.Sqrt(dx*dx + dy*dy)
-		if l < 1e-9 {
-			return
-		}
-		dx /= l
-		dy /= l
-		// outer = CCW perp (-dy, dx); inner = CW perp (dy, -dx)
-		outer = append(outer, gopdf.Point{X: px - dy*h, Y: py + dx*h})
-		inner = append(inner, gopdf.Point{X: px + dy*h, Y: py - dx*h})
-	}
-
-	// ── Left arm (straight, t: 0=tip → 1=valley) ────────────────────────────
+	// ── Left arm unit direction + perps ─────────────────────────────────────
 	ldx, ldy := p1x-p0x, p1y-p0y
-	for i := 0; i <= N; i++ {
-		t := float64(i) / float64(N)
-		h := hMin + t*(hMax-hMin)
-		addSample(p0x+t*ldx, p0y+t*ldy, ldx, ldy, h)
-	}
+	ll := math.Sqrt(ldx*ldx + ldy*ldy); ldx /= ll; ldy /= ll
+	lox, loy := -ldy, ldx  // outer (CCW)
+	lix, liy := ldy, -ldx  // inner (CW)
+	lbx, lby := -ldx, -ldy // backward (for left cap)
 
-	// ── Right arm (Bézier, t: 0=valley → 1=tip) ─────────────────────────────
-	for i := 1; i <= N; i++ {
-		t := float64(i) / float64(N)
+	// ── Right arm tangent at tip (t=1) ──────────────────────────────────────
+	rtdx, rtdy := p2x-c2x, p2y-c2y // ∝ B'(1)
+	rl := math.Sqrt(rtdx*rtdx + rtdy*rtdy); rtdx /= rl; rtdy /= rl
+	rox, roy := -rtdy, rtdx  // outer at tip
+	rix, riy := rtdy, -rtdx  // inner at tip
+	rbx, rby := -rtdx, -rtdy // backward at tip
+
+	type pt = gopdf.Point
+	poly := make([]pt, 0, 4*N+30)
+
+	// helper: sample Bézier point + CCW/CW offsets
+	bezierOuterInner := func(t, hh float64) (po, pi pt) {
 		u := 1 - t
-		// point on cubic Bézier
 		px := u*u*u*p1x + 3*u*u*t*c1x + 3*u*t*t*c2x + t*t*t*p2x
 		py := u*u*u*p1y + 3*u*u*t*c1y + 3*u*t*t*c2y + t*t*t*p2y
-		// tangent (derivative)
 		tdx := 3 * (u*u*(c1x-p1x) + 2*u*t*(c2x-c1x) + t*t*(p2x-c2x))
 		tdy := 3 * (u*u*(c1y-p1y) + 2*u*t*(c2y-c1y) + t*t*(p2y-c2y))
-		h := hMax + t*(hMin-hMax) // thick→thin
-		addSample(px, py, tdx, tdy, h)
+		tl := math.Sqrt(tdx*tdx + tdy*tdy); tdx /= tl; tdy /= tl
+		return pt{px - tdy*hh, py + tdx*hh}, pt{px + tdy*hh, py - tdx*hh}
 	}
 
-	// ── Build polygon: outer forward + inner reversed ─────────────────────────
-	pts := make([]gopdf.Point, 0, len(outer)+len(inner))
-	pts = append(pts, outer...)
-	for i := len(inner) - 1; i >= 0; i-- {
-		pts = append(pts, inner[i])
+	// cap45 returns the 45° interpolated cap point (unit vectors must be perpendicular)
+	cap45 := func(cx, cy, ax, ay, bx, by, hh float64) pt {
+		return pt{cx + (ax+bx)*hh/math.Sqrt2, cy + (ay+by)*hh/math.Sqrt2}
 	}
+
+	// ── 1. Left arm outer: tip → valley ─────────────────────────────────────
+	for i := 0; i <= N; i++ {
+		t := float64(i) / float64(N)
+		poly = append(poly, pt{p0x + t*(p1x-p0x) + lox*h, p0y + t*(p1y-p0y) + loy*h})
+	}
+
+	// ── 2. Valley outer: right-arm starts horizontally, outer = (0,+1) ──────
+	poly = append(poly, pt{p1x, p1y + h})
+
+	// ── 3. Right arm outer: valley → tip ────────────────────────────────────
+	for i := 1; i <= N; i++ {
+		o, _ := bezierOuterInner(float64(i)/float64(N), h)
+		poly = append(poly, o)
+	}
+
+	// ── 4. Right cap (5-point semicircle) ────────────────────────────────────
+	poly = append(poly,
+		pt{p2x + rox*h, p2y + roy*h},
+		cap45(p2x, p2y, rox, roy, rbx, rby, h),
+		pt{p2x + rbx*h, p2y + rby*h},
+		cap45(p2x, p2y, rbx, rby, rix, riy, h),
+		pt{p2x + rix*h, p2y + riy*h},
+	)
+
+	// ── 5. Right arm inner: tip → valley ────────────────────────────────────
+	for i := N - 1; i >= 1; i-- {
+		_, pi := bezierOuterInner(float64(i)/float64(N), h)
+		poly = append(poly, pi)
+	}
+
+	// ── 6. Valley inner: smooth rounded arc ──────────────────────────────────
+	// Right arm inner at valley (tangent is horizontal → CW inner = (0,−1))
+	rivX, rivY := p1x, p1y-h
+	// Left arm inner at valley
+	livX, livY := p1x+lix*h, p1y+liy*h
+	// Quadratic Bézier control pulled toward valley center → creates the concave arc
+	ctX := (rivX+livX)*0.45 + p1x*0.55
+	ctY := (rivY+livY)*0.45 + p1y*0.55
+	for _, t := range []float64{0.0, 0.25, 0.5, 0.75, 1.0} {
+		u := 1 - t
+		poly = append(poly, pt{
+			u*u*rivX + 2*u*t*ctX + t*t*livX,
+			u*u*rivY + 2*u*t*ctY + t*t*livY,
+		})
+	}
+
+	// ── 7. Left arm inner: valley → tip ─────────────────────────────────────
+	for i := N - 1; i >= 0; i-- {
+		t := float64(i) / float64(N)
+		poly = append(poly, pt{p0x + t*(p1x-p0x) + lix*h, p0y + t*(p1y-p0y) + liy*h})
+	}
+
+	// ── 8. Left cap (5-point semicircle) ────────────────────────────────────
+	poly = append(poly,
+		cap45(p0x, p0y, lix, liy, lbx, lby, h),
+		pt{p0x + lbx*h, p0y + lby*h},
+		cap45(p0x, p0y, lbx, lby, lox, loy, h),
+	)
 
 	pdf.SetFillColor(0, 0, 0)
-	pdf.Polygon(pts, "F")
+	pdf.Polygon(poly, "F")
 	return nil
 }
 
