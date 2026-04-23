@@ -25,10 +25,10 @@ func TestIssueWHTCertificatePDF(t *testing.T) {
 	}
 }
 
-func TestStampPDFWithEmptyStamps(t *testing.T) {
+func TestFillCertificateWithEmptyFields(t *testing.T) {
 	var out bytes.Buffer
-	if err := stampPDF(nil, nil, &out); err != nil {
-		t.Fatalf("stampPDF error: %v", err)
+	if err := fillCertificate(nil, nil, &out); err != nil {
+		t.Fatalf("fillCertificate error: %v", err)
 	}
 	if !bytes.HasPrefix(out.Bytes(), []byte("%PDF")) {
 		t.Fatal("output does not look like a PDF")

@@ -38,11 +38,11 @@ func sampleTaxInfo() TaxInfo {
 func TestPositionHelpers(t *testing.T) {
 	st13 := positionTaxID13Digits("1 2 3 4 5 6 7 8 9 0 1 2 3", -10, 14)
 	if len(st13) != 13 {
-		t.Fatalf("expected 13 stamps, got %d", len(st13))
+		t.Fatalf("expected 13 fields, got %d", len(st13))
 	}
 	st10 := positionTaxID10Digits("0 1 2 3 4 5 6 7 8 9", -20, 12)
 	if len(st10) != 10 {
-		t.Fatalf("expected 10 stamps, got %d", len(st10))
+		t.Fatalf("expected 10 fields, got %d", len(st10))
 	}
 	st := position("AB", 9, -1, []float64{100})
 	if len(st) != 1 || st[0].Text != "A" || st[0].Dx != 100 {
@@ -50,7 +50,7 @@ func TestPositionHelpers(t *testing.T) {
 	}
 }
 
-func TestTickAndCheckmarkStamp(t *testing.T) {
+func TestTickAndCheckmarkField(t *testing.T) {
 	t.Run("tick true returns non-empty", func(t *testing.T) {
 		if tick(true) == "" {
 			t.Fatalf("tick(true) should return a non-empty checkmark")
@@ -65,60 +65,60 @@ func TestTickAndCheckmarkStamp(t *testing.T) {
 	t.Run("checkmark", func(t *testing.T) {
 		c := checkmark(true, 1.5, -2.5)
 		if c.Text == "" || c.FontSize != 10 || c.Dx != 1.5 || c.Dy != -2.5 || c.Position != TopLeft {
-			t.Fatalf("checkmark stamp mismatch: %+v", c)
+			t.Fatalf("checkmark field mismatch: %+v", c)
 		}
 	})
 
 	t.Run("checkmark false is empty", func(t *testing.T) {
 		c := checkmark(false, 0, 0)
 		if c.Text != "" || c.FontSize != 10 || c.Position != TopLeft {
-			t.Fatalf("checkmark(false) stamp mismatch: %+v", c)
+			t.Fatalf("checkmark(false) field mismatch: %+v", c)
 		}
 	})
 }
 
-func TestTextStampsFromTaxInfo(t *testing.T) {
+func TestTextFieldsFromTaxInfo(t *testing.T) {
 	tax := sampleTaxInfo()
-	stamps := TextStampsFromTaxInfo(tax)
-	if len(stamps) == 0 {
-		t.Fatalf("expected stamps, got none")
+	fields := TextFieldsFromTaxInfo(tax)
+	if len(fields) == 0 {
+		t.Fatalf("expected fields, got none")
 	}
-	// All returned stamps must have non-empty text (filterEmptyTextStamps enforces this)
-	for _, s := range stamps {
-		if s.Text == "" {
-			t.Fatalf("found empty text stamp: %+v", s)
+	// All returned fields must have non-empty text (filterEmptyTextFields enforces this)
+	for _, f := range fields {
+		if f.Text == "" {
+			t.Fatalf("found empty text field: %+v", f)
 		}
 	}
 }
 
-func TestCertificateImageStamps(t *testing.T) {
+func TestCertificateImageFields(t *testing.T) {
 	pngBytes := tinyEmptyPNG()
-	st := CertificateImageStamps(bytes.NewReader(pngBytes), bytes.NewReader(pngBytes))
-	if len(st) != 2 {
-		t.Fatalf("expected 2 image stamps")
+	fields := CertificateImageFields(bytes.NewReader(pngBytes), bytes.NewReader(pngBytes))
+	if len(fields) != 2 {
+		t.Fatalf("expected 2 image fields")
 	}
-	if st[0].Reader == nil || st[1].Reader == nil {
+	if fields[0].Reader == nil || fields[1].Reader == nil {
 		t.Fatalf("expected non-nil readers")
 	}
 }
 
-func TestCertificateImageStampsWithNilInputs(t *testing.T) {
-	st := CertificateImageStamps(nil, nil)
-	if len(st) != 2 {
-		t.Fatalf("expected 2 image stamps even with nil inputs")
+func TestCertificateImageFieldsWithNilInputs(t *testing.T) {
+	fields := CertificateImageFields(nil, nil)
+	if len(fields) != 2 {
+		t.Fatalf("expected 2 image fields even with nil inputs")
 	}
-	if st[0].Reader == nil || st[1].Reader == nil {
+	if fields[0].Reader == nil || fields[1].Reader == nil {
 		t.Fatalf("expected non-nil readers (should fallback to empty PNG)")
 	}
 
 	signBytes := make([]byte, 100)
-	n, _ := st[0].Reader.Read(signBytes)
+	n, _ := fields[0].Reader.Read(signBytes)
 	if n < 10 {
 		t.Fatalf("expected valid PNG data in signature reader, got %d bytes", n)
 	}
 
 	logoBytes := make([]byte, 100)
-	n, _ = st[1].Reader.Read(logoBytes)
+	n, _ = fields[1].Reader.Read(logoBytes)
 	if n < 10 {
 		t.Fatalf("expected valid PNG data in logo reader, got %d bytes", n)
 	}

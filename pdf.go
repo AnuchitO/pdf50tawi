@@ -42,9 +42,9 @@ func anchorToXY(anchor Anchor, dx, dy float64) (float64, float64) {
 	}
 }
 
-// stampPDF builds the output PDF by importing the template, then placing all
-// text and image stamps. The Thai font is embedded once with subsetting.
-func stampPDF(textStamps []TextStamp, imageStamps []ImageStamp, out io.Writer) error {
+// fillCertificate builds the output PDF by importing the template, then placing all
+// text and image fields. The Thai font is embedded once with subsetting.
+func fillCertificate(textFields []TextField, imageFields []ImageField, out io.Writer) error {
 	tpl, err := Tax50tawiPDFTemplate()
 	if err != nil {
 		return err
@@ -77,14 +77,14 @@ func stampPDF(textStamps []TextStamp, imageStamps []ImageStamp, out io.Writer) e
 	pdf.AddPage()
 	pdf.UseImportedTemplate(tplIdx, 0, 0, pageWidth, pageHeight)
 
-	for i, img := range imageStamps {
+	for i, img := range imageFields {
 		if err := placeImage(&pdf, img, i); err != nil {
 			return err
 		}
 	}
 
-	for _, stamp := range textStamps {
-		if err := placeText(&pdf, stamp); err != nil {
+	for _, field := range textFields {
+		if err := placeText(&pdf, field); err != nil {
 			return err
 		}
 	}
@@ -93,34 +93,34 @@ func stampPDF(textStamps []TextStamp, imageStamps []ImageStamp, out io.Writer) e
 	return err
 }
 
-func placeText(pdf *gopdf.GoPdf, stamp TextStamp) error {
-	x, y := anchorToXY(stamp.Position, stamp.Dx, stamp.Dy)
+func placeText(pdf *gopdf.GoPdf, field TextField) error {
+	x, y := anchorToXY(field.Position, field.Dx, field.Dy)
 
 	// ✓ has no glyph in THSarabunNew — draw as a filled vector polygon instead.
-	if stamp.Text == "✓" {
-		return drawCheckmark(pdf, x, y, float64(stamp.FontSize))
+	if field.Text == "✓" {
+		return drawCheckmark(pdf, x, y, float64(field.FontSize))
 	}
 
-	if err := pdf.SetFont("THSarabunNew", "", float64(stamp.FontSize)); err != nil {
+	if err := pdf.SetFont("THSarabunNew", "", float64(field.FontSize)); err != nil {
 		return fmt.Errorf("set font: %w", err)
 	}
 
 	// pdfcpu anchors the text bounding box corner that matches the anchor name.
 	// gopdf.Text() always starts text at the left edge, so we must shift x to
 	// replicate right-align (BottomRight/TopRight/Right) and center (XCenter).
-	switch stamp.Position {
+	switch field.Position {
 	case TopCenter, BottomCenter, Center:
-		if w, err := pdf.MeasureTextWidth(stamp.Text); err == nil {
+		if w, err := pdf.MeasureTextWidth(field.Text); err == nil {
 			x -= w / 2
 		}
 	case TopRight, BottomRight, Right:
-		if w, err := pdf.MeasureTextWidth(stamp.Text); err == nil {
+		if w, err := pdf.MeasureTextWidth(field.Text); err == nil {
 			x -= w
 		}
 	}
 
 	pdf.SetXY(x, y)
-	return pdf.Text(stamp.Text)
+	return pdf.Text(field.Text)
 }
 
 
@@ -240,11 +240,11 @@ func drawCheckmark(pdf *gopdf.GoPdf, x, y, size float64) error {
 	return nil
 }
 
-func placeImage(pdf *gopdf.GoPdf, stamp ImageStamp, idx int) error {
-	if stamp.Reader == nil {
+func placeImage(pdf *gopdf.GoPdf, field ImageField, idx int) error {
+	if field.Reader == nil {
 		return nil
 	}
-	data, err := io.ReadAll(stamp.Reader)
+	data, err := io.ReadAll(field.Reader)
 	if err != nil {
 		return err
 	}
@@ -254,9 +254,9 @@ func placeImage(pdf *gopdf.GoPdf, stamp ImageStamp, idx int) error {
 		return nil // skip invalid/empty images
 	}
 
-	w := pageWidth * stamp.Scale
+	w := pageWidth * field.Scale
 	h := w * float64(cfg.Height) / float64(cfg.Width)
-	x, y := anchorToXY(stamp.Pos, stamp.Dx, stamp.Dy)
+	x, y := anchorToXY(field.Pos, field.Dx, field.Dy)
 
 	ext := ".png"
 	if len(data) > 2 && data[0] == 0xFF && data[1] == 0xD8 {

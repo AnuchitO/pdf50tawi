@@ -6,8 +6,8 @@ import (
 	"strings"
 )
 
-// TextStamp holds configuration for a text stamp
-type TextStamp struct {
+// TextField defines a text value and its position on the certificate form.
+type TextField struct {
 	Text     string
 	Dx       float64
 	Dy       float64
@@ -23,7 +23,8 @@ func ifEmpty(s string) string {
 	return s
 }
 
-type ImageStamp struct {
+// ImageField defines an image (signature or seal) and its position on the certificate form.
+type ImageField struct {
 	Reader   io.Reader
 	Pos      Anchor
 	Dx       float64
@@ -34,8 +35,8 @@ type ImageStamp struct {
 	OnTop    bool
 }
 
-func CertificateImageStamps(sign io.Reader, logo io.Reader) []ImageStamp {
-	return []ImageStamp{
+func CertificateImageFields(sign io.Reader, logo io.Reader) []ImageField {
+	return []ImageField{
 		{Reader: ifNil(sign), Pos: Center, Dx: 86, Dy: -313, Scale: 0.1, Opacity: 1, OnTop: true},
 		{Reader: ifNil(logo), Pos: Center, Dx: 212, Dy: -325, Scale: 0.06, Opacity: 1, OnTop: false, Diagonal: 1},
 	}
@@ -48,8 +49,8 @@ func ifNil(img io.Reader) io.Reader {
 	return img
 }
 
-// positionTaxID13Digits creates individual text stamps for each digit of a tax ID
-func positionTaxID13Digits(taxID string, dy float64, fontSize int) []TextStamp {
+// positionTaxID13Digits creates individual text fields for each digit of a 13-digit tax ID
+func positionTaxID13Digits(taxID string, dy float64, fontSize int) []TextField {
 	digits := strings.ReplaceAll(taxID, " ", "")
 
 	// X positions for 13-digit tax ID (with spacing to align position on each box form)
@@ -58,8 +59,8 @@ func positionTaxID13Digits(taxID string, dy float64, fontSize int) []TextStamp {
 	return position(digits, fontSize, dy, xPositions)
 }
 
-// positionTaxID10Digits creates individual text stamps for each digit of a tax ID
-func positionTaxID10Digits(taxID string, dy float64, fontSize int) []TextStamp {
+// positionTaxID10Digits creates individual text fields for each digit of a 10-digit tax ID
+func positionTaxID10Digits(taxID string, dy float64, fontSize int) []TextField {
 	digits := strings.ReplaceAll(taxID, " ", "")
 
 	// X positions for 10-digit tax ID (with spacing to align position on each box form)
@@ -68,11 +69,11 @@ func positionTaxID10Digits(taxID string, dy float64, fontSize int) []TextStamp {
 	return position(digits, fontSize, dy, xPositions)
 }
 
-func position(digits string, fontSize int, dy float64, xPositions []float64) []TextStamp {
-	var stamps []TextStamp
+func position(digits string, fontSize int, dy float64, xPositions []float64) []TextField {
+	var fields []TextField
 	for i, digit := range digits {
 		if i < len(xPositions) {
-			stamps = append(stamps, TextStamp{
+			fields = append(fields, TextField{
 				Text:     string(digit),
 				Dx:       xPositions[i],
 				Dy:       dy,
@@ -81,7 +82,7 @@ func position(digits string, fontSize int, dy float64, xPositions []float64) []T
 			})
 		}
 	}
-	return stamps
+	return fields
 }
 
 func tick(pnd bool) string {
@@ -91,8 +92,8 @@ func tick(pnd bool) string {
 	return ""
 }
 
-func checkmark(isSet bool, dx float64, dy float64) TextStamp {
-	return TextStamp{
+func checkmark(isSet bool, dx float64, dy float64) TextField {
+	return TextField{
 		Text:     tick(isSet),
 		Dx:       dx,
 		Dy:       dy,
@@ -101,11 +102,12 @@ func checkmark(isSet bool, dx float64, dy float64) TextStamp {
 	}
 }
 
-// convert data from TaxInfo to TextStampConfig
-func TextStampsFromTaxInfo(tax TaxInfo) []TextStamp {
+// TextFieldsFromTaxInfo converts TaxInfo into the complete set of TextField values
+// to be rendered on the certificate form.
+func TextFieldsFromTaxInfo(tax TaxInfo) []TextField {
 
 	// Payer Information (ผู้จ่ายเงิน)
-	payer := []TextStamp{
+	payer := []TextField{
 		{Text: tax.Payer.Name, Dx: 58, Dy: -110, FontSize: 14, Position: TopLeft},
 		{Text: tax.Payer.Address, Dx: 62, Dy: -132, FontSize: 12, Position: TopLeft},
 	}
@@ -113,13 +115,13 @@ func TextStampsFromTaxInfo(tax TaxInfo) []TextStamp {
 	payer = append(payer, positionTaxID10Digits(tax.Payer.TaxID10Digit, -111, 16)...)
 
 	// Payee Information (ผู้ถูกหักภาษี ณ ที่จ่าย)
-	payee := []TextStamp{
+	payee := []TextField{
 		{Text: tax.Payee.Name, Dx: 58, Dy: -182, FontSize: 14, Position: TopLeft},
 		{Text: tax.Payee.Address, Dx: 62, Dy: -208, FontSize: 12, Position: TopLeft},
 	}
 	payee = append(payee, positionTaxID13Digits(tax.Payee.TaxID, -163, 16)...)
 	payee = append(payee, positionTaxID10Digits(tax.Payee.TaxID10Digit, -182, 16)...)
-	payee = append(payee, []TextStamp{
+	payee = append(payee, []TextField{
 		// Tax Filing Reference (ลำดับที่)
 		{Text: tax.Payee.SequenceNumber, Dx: -190, Dy: -236, FontSize: 14, Position: TopCenter},
 
@@ -132,8 +134,8 @@ func TextStampsFromTaxInfo(tax TaxInfo) []TextStamp {
 		checkmark(tax.Payee.Pnd_53, 397, -248),
 	}...)
 
-	// Define text stamps configuration with demo data - adjusted for Form 50 ทวิ layout
-	textStamps := []TextStamp{
+	// Define text fields for Form 50 ทวิ layout
+	textFields := []TextField{
 		// Document Details (top right)
 		{Text: tax.DocumentDetails.BookNumber, Dx: 519, Dy: -59, FontSize: 14, Position: TopLeft},
 		{Text: tax.DocumentDetails.DocumentNumber, Dx: 519, Dy: -74, FontSize: 14, Position: TopLeft},
@@ -240,18 +242,18 @@ func TextStampsFromTaxInfo(tax TaxInfo) []TextStamp {
 		{Text: tax.Certification.DateOfIssuance.Year, Dx: 152, Dy: 77, FontSize: 14, Position: BottomCenter},
 	}
 
-	textStamps = append(textStamps, payer...)
-	textStamps = append(textStamps, payee...)
+	textFields = append(textFields, payer...)
+	textFields = append(textFields, payee...)
 
-	return filterEmptyTextStamps(textStamps)
+	return filterEmptyTextFields(textFields)
 }
 
-// filter empty text stamps
-func filterEmptyTextStamps(textStamps []TextStamp) []TextStamp {
-	var filtered []TextStamp
-	for _, stamp := range textStamps {
-		if strings.TrimSpace(stamp.Text) != "" {
-			filtered = append(filtered, stamp)
+// filterEmptyTextFields removes fields with empty or whitespace-only text.
+func filterEmptyTextFields(textFields []TextField) []TextField {
+	var filtered []TextField
+	for _, field := range textFields {
+		if strings.TrimSpace(field.Text) != "" {
+			filtered = append(filtered, field)
 		}
 	}
 	return filtered
@@ -271,9 +273,9 @@ func IssueWHTCertificatePDFDeprecated(outputPDF io.Writer, taxInfo TaxInfo) erro
 	return IssueWHTCertificatePDF(outputPDF, taxInfo, sign, logo)
 }
 
-// IssueWHTCertificatePDF generates a stamped WHT certificate PDF.
+// IssueWHTCertificatePDF generates a filled WHT certificate PDF.
 func IssueWHTCertificatePDF(outputPDF io.Writer, taxInfo TaxInfo, sign io.Reader, logo io.Reader) error {
-	images := CertificateImageStamps(sign, logo)
-	texts := TextStampsFromTaxInfo(taxInfo)
-	return stampPDF(texts, images, outputPDF)
+	images := CertificateImageFields(sign, logo)
+	texts := TextFieldsFromTaxInfo(taxInfo)
+	return fillCertificate(texts, images, outputPDF)
 }
