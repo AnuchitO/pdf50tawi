@@ -10,8 +10,8 @@ cd "$(dirname "$0")/.."
 
 PORT=8080
 HOST="http://localhost:$PORT"
-SIGN="cmd/demo-cli/demo-signature-1280x720-rectangle.png"
-SEAL="cmd/demo-cli/demo-logo-1024x1024-square.png"
+SIGN=".demo/demo-signature-1280x720-rectangle.png"
+SEAL=".demo/demo-logo-1024x1024-square.png"
 
 # ── Shared tax info JSON (used by all three strategies) ───────────────────────
 read -r -d '' TAX_INFO_JSON <<'JSON' || true
@@ -127,7 +127,7 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 # Spin up a temporary local file server to serve the demo images.
 # In production, replace these with real CDN/storage URLs.
 FILE_SERVER_PORT=9090
-FILE_SERVER_ROOT="cmd/demo-cli"
+FILE_SERVER_ROOT=".demo"
 python3 -m http.server "$FILE_SERVER_PORT" --directory "$FILE_SERVER_ROOT" &>/dev/null &
 FILE_SERVER_PID=$!
 trap 'kill "$SERVER_PID" "$FILE_SERVER_PID" 2>/dev/null; wait 2>/dev/null' EXIT

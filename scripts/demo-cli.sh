@@ -8,8 +8,8 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-SIGN="${1:-cmd/demo-cli/demo-signature-1280x720-rectangle.png}"
-SEAL="${2:-cmd/demo-cli/demo-logo-1024x1024-square.png}"
+SIGN="${1:-.demo/demo-signature-1280x720-rectangle.png}"
+SEAL="${2:-.demo/demo-logo-1024x1024-square.png}"
 OUTPUT="certificate-cli.pdf"
 
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
