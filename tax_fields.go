@@ -16,12 +16,6 @@ type TextField struct {
 	Position Anchor
 }
 
-func ifEmpty(s string) string {
-	if s == "" {
-		return ""
-	}
-	return s
-}
 
 // ImageField defines an image (signature or seal) and its position on the certificate form.
 type ImageField struct {
@@ -257,20 +251,6 @@ func filterEmptyTextFields(textFields []TextField) []TextField {
 		}
 	}
 	return filtered
-}
-
-func IssueWHTCertificatePDFDeprecated(outputPDF io.Writer, taxInfo TaxInfo) error {
-
-	sign, err := LoadImage(taxInfo.Certification.PayerSignatureImage)
-	if err != nil {
-		return err
-	}
-	logo, err := LoadImage(taxInfo.Certification.CompanySealImage)
-	if err != nil {
-		return err
-	}
-
-	return IssueWHTCertificatePDF(outputPDF, taxInfo, sign, logo)
 }
 
 // IssueWHTCertificatePDF generates a filled WHT certificate PDF.

@@ -11,20 +11,6 @@ import (
 	"os"
 )
 
-// LoadOption represents an option for LoadImage function
-type LoadOption func(*loadOptions)
-
-type loadOptions struct {
-	httpRequest *http.Request
-}
-
-// WithHTTPRequest adds HTTP request context for multipart file uploads
-func WithHTTPRequest(r *http.Request) LoadOption {
-	return func(opts *loadOptions) {
-		opts.httpRequest = r
-	}
-}
-
 func tinyEmptyPNG() []byte {
 	size := 1
 	img := image.NewRGBA(image.Rect(0, 0, size, size))
@@ -38,33 +24,7 @@ func tinyEmptyPNG() []byte {
 	return buf.Bytes()
 }
 
-// LoadImage loads an image based on its source type
-// For Upload source type, pass WithHTTPRequest(r) option
-// For File and URL source types, no options needed
-func LoadImage(image Image, options ...LoadOption) (io.Reader, error) {
-	opts := &loadOptions{}
-	for _, opt := range options {
-		opt(opts)
-	}
-
-	switch image.SourceType {
-	case Upload:
-		if opts.httpRequest == nil {
-			return nil, fmt.Errorf("LoadImage: Upload source type requires HTTP request context. Use LoadImage(image, WithHTTPRequest(r))")
-		}
-		return LoadImageFromMultiPartFile(opts.httpRequest, image.Value)
-	case URL:
-		return LoadImageFromURL(image.Value)
-	case File:
-		return LoadImageFromFile(image.Value)
-	case "":
-		return bytes.NewReader(tinyEmptyPNG()), nil
-	default:
-		return nil, fmt.Errorf("LoadImage: unsupported source type: %s", image.SourceType)
-	}
-}
-
-// LoadImageFromFile loads image from file path (no HTTP context needed)
+// LoadImageFromFile loads a PNG or JPEG image from a local file path.
 func LoadImageFromFile(file string) (io.Reader, error) {
 	f, err := os.Open(file)
 	if err != nil {
@@ -73,18 +33,16 @@ func LoadImageFromFile(file string) (io.Reader, error) {
 	defer f.Close()
 
 	var buf bytes.Buffer
-	_, err = io.Copy(&buf, f)
-	if err != nil {
+	if _, err = io.Copy(&buf, f); err != nil {
 		return nil, err
 	}
-
 	return bytes.NewReader(buf.Bytes()), nil
 }
 
-// LoadImageFromMultiPartFile loads image from multipart form upload (requires HTTP context)
-// Use this function in web handlers when dealing with file uploads
-func LoadImageFromMultiPartFile(r *http.Request, file string) (io.Reader, error) {
-	f, header, err := r.FormFile(file)
+// LoadImageFromMultiPartFile reads a PNG image uploaded via multipart form.
+// field is the form field name (e.g. "signature").
+func LoadImageFromMultiPartFile(r *http.Request, field string) (io.Reader, error) {
+	f, header, err := r.FormFile(field)
 	if err != nil {
 		return nil, err
 	}
@@ -95,35 +53,27 @@ func LoadImageFromMultiPartFile(r *http.Request, file string) (io.Reader, error)
 	}
 
 	var buf bytes.Buffer
-	_, err = io.Copy(&buf, f)
-	if err != nil {
+	if _, err = io.Copy(&buf, f); err != nil {
 		return nil, err
 	}
-
 	return bytes.NewReader(buf.Bytes()), nil
 }
 
-// LoadImageFromURL loads image from URL (no HTTP context needed)
+// LoadImageFromURL fetches a PNG image from the given URL.
 func LoadImageFromURL(url string) (io.Reader, error) {
-	resp, err := http.Get(url)
+	resp, err := http.Get(url) //nolint:noctx
 	if err != nil {
 		return nil, err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("invalid status code: %d", resp.StatusCode)
-	}
-
-	if resp.Header.Get("Content-Type") != "image/png" {
-		return nil, fmt.Errorf("invalid content type: %s", resp.Header.Get("Content-Type"))
+		return nil, fmt.Errorf("unexpected status %d fetching %s", resp.StatusCode, url)
 	}
 
 	var buf bytes.Buffer
-	_, err = io.Copy(&buf, resp.Body)
-	if err != nil {
+	if _, err = io.Copy(&buf, resp.Body); err != nil {
 		return nil, err
 	}
-
 	return bytes.NewReader(buf.Bytes()), nil
 }

@@ -2,7 +2,6 @@ package pdf50tawi
 
 import (
 	"fmt"
-	"net/url"
 	"strings"
 )
 
@@ -18,13 +17,9 @@ func (v *ValidationError) Error() string   { return strings.Join(v.Errors, "; ")
 func ValidateTaxInfo(t TaxInfo) error {
 	var ve ValidationError
 
-	// Payer
 	ve.validateParty("payer", t.Payer.Name, t.Payer.TaxID, t.Payer.TaxID10Digit)
-	// Payee
 	ve.validateParty("payee", t.Payee.Name, t.Payee.TaxID, t.Payee.TaxID10Digit)
-	// Payee PND validation
 	ve.validatePayeePND(t.Payee)
-	// Withholding type validation
 	ve.validateWithholdingType(t.WithholdingType)
 
 	if ve.HasErrors() {
@@ -49,7 +44,6 @@ func (ve *ValidationError) validateParty(prefix, name, tax13, tax10 string) {
 	if strings.TrimSpace(name) == "" {
 		ve.Add(fmt.Sprintf("%s.name is required", prefix))
 	}
-	// Strip spaces first, then check if empty before validating
 	strippedTax13 := stripSpaces(tax13)
 	strippedTax10 := stripSpaces(tax10)
 	if strippedTax13 != "" && !isDigitsLen(strippedTax13, 13) {
@@ -57,37 +51,6 @@ func (ve *ValidationError) validateParty(prefix, name, tax13, tax10 string) {
 	}
 	if strippedTax10 != "" && !isDigitsLen(strippedTax10, 10) {
 		ve.Add(fmt.Sprintf("%s.taxId10Digit must be 10 digits", prefix))
-	}
-}
-
-func (ve *ValidationError) validateImage(image Image) {
-	// If both source type and value are empty, it's valid (no image)
-	if strings.TrimSpace(image.SourceType.String()) == "" && strings.TrimSpace(image.Value) == "" {
-		return
-	}
-
-	// Validate source type
-	switch image.SourceType {
-	case Upload:
-	case URL:
-	case File:
-	default:
-		ve.Add("image.sourceType must be 'upload', 'url', or 'file'")
-		return
-	}
-
-	// Validate value is not empty
-	if strings.TrimSpace(image.Value) == "" {
-		ve.Add(fmt.Sprintf("image.value is required for '%s' source type", image.SourceType.String()))
-		return
-	}
-
-	// If URL, validate URL format
-	if image.SourceType == URL {
-		parsedURL, err := url.Parse(image.Value)
-		if err != nil || parsedURL.Scheme == "" || parsedURL.Host == "" {
-			ve.Add("image.value must be a valid URL")
-		}
 	}
 }
 

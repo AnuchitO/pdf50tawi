@@ -1,7 +1,5 @@
 package pdf50tawi
 
-import "io"
-
 type TaxInfo struct {
 	DocumentDetails DocumentDetails `json:"documentDetails"`
 	Payer           Payer           `json:"payer"`
@@ -13,28 +11,26 @@ type TaxInfo struct {
 	Income40_4A IncomeDetail `json:"income40_4A"` // 4. (ก) ดอกเบี้ย ฯลฯ ตามมาตรา 40 (4) (ก)
 
 	// 4. (ข) เงินปันผล เงินส่วนแบ่งกำไร ฯลฯ ตามมาตรา 40 (4) (ข)
-	// 4. (ข) (1) (1) กรณีผู้ได้รับเงินปันผลได้รับเครดิตภาษี โดยจ่ายจาก
-	// กำไรสุทธิของกิจการที่ต้องเสียภาษีเงินได้นิติบุคคลในอัตราดังนี้
 	Income40_4B_1_1      IncomeDetail `json:"income40_4B_1_1"`      // 4. (ข) (1) (1.1) อัตราร้อยละ 30 ของกำไรสุทธิ
 	Income40_4B_1_2      IncomeDetail `json:"income40_4B_1_2"`      // 4. (ข) (1) (1.2) อัตราร้อยละ 25 ของกำไรสุทธิ
 	Income40_4B_1_3      IncomeDetail `json:"income40_4B_1_3"`      // 4. (ข) (1) (1.3) อัตราร้อยละ 20 ของกำไรสุทธิ
-	Income40_4B_1_4_Rate string       `json:"income40_4B_1_4_rate"` // 4. (ข) (1) (1.4) อัตราอื่น ๆ (ระบุ)... ของกำไรสุทธิ
+	Income40_4B_1_4_Rate string       `json:"income40_4B_1_4_rate"` // 4. (ข) (1) (1.4) อัตราอื่น ๆ (ระบุ)
 	Income40_4B_1_4      IncomeDetail `json:"income40_4B_1_4"`      // 4. (ข) (1) (1.4)
 	Income40_4B_2_1      IncomeDetail `json:"income40_4B_2_1"`      // 4. (ข) (2) (2.1) กำไรสุทธิของกิจการที่ได้รับยกเว้นภาษีเงินได้นิติบุคคล
-	Income40_4B_2_2      IncomeDetail `json:"income40_4B_2_2"`      // 4. (ข) (2) (2.2) เงินปันผลหรือเงินส่วนแบ่งของกำไรที่ได้รับยกเว้นไม่ต้องนำมารวม คำนวณเป็นรายได้เพื่อเสียภาษีเงินได้นิติบุคคล
-	Income40_4B_2_3      IncomeDetail `json:"income40_4B_2_3"`      // 4. (ข) (2) (2.3) กำไรสุทธิส่วนที่ได้หักผลขาดทุนสุทธิยกมาไม่เกิน 5 ปี ก่อนรอบระยะเวลาบัญชีปีปัจจุบัน
-	Income40_4B_2_4      IncomeDetail `json:"income40_4B_2_4"`      // 4. (ข) (2) (2.4)  กำไรที่รับรู้ทางบัญชีโดยวิธีส่วนได้เสีย (equity method)
-	Income40_4B_2_5_Note string       `json:"income40_4B_2_5_note"` // 4. (ข) (2) (2.5) อื่น ๆ (ระบุ)... ของกำไรสุทธิ
+	Income40_4B_2_2      IncomeDetail `json:"income40_4B_2_2"`      // 4. (ข) (2) (2.2)
+	Income40_4B_2_3      IncomeDetail `json:"income40_4B_2_3"`      // 4. (ข) (2) (2.3)
+	Income40_4B_2_4      IncomeDetail `json:"income40_4B_2_4"`      // 4. (ข) (2) (2.4)
+	Income40_4B_2_5_Note string       `json:"income40_4B_2_5_note"` // 4. (ข) (2) (2.5) อื่น ๆ (ระบุ)
 	Income40_4B_2_5      IncomeDetail `json:"income40_4B_2_5"`      // 4. (ข) (2) (2.5)
 
 	Income5      IncomeDetail `json:"income5"`      // 5. การจ่ายเงินได้ที่ต้องหักภาษี ณ ที่จ่าย
 	Income6      IncomeDetail `json:"income6"`      // 6. อื่น ๆ (ระบุ)
 	Income6_Note string       `json:"income6_note"` // 6. อื่น ๆ (ระบุ)
 
-	Totals          Totals          `json:"totals"`          // รวมเงิน
-	OtherPayments   OtherPayments   `json:"otherPayments"`   // จ่ายภาษี
-	WithholdingType WithholdingType `json:"withholdingType"` // ประเภทการหักภาษี
-	Certification   Certification   `json:"certification"`   // การยืนยัน
+	Totals          Totals          `json:"totals"`
+	OtherPayments   OtherPayments   `json:"otherPayments"`
+	WithholdingType WithholdingType `json:"withholdingType"`
+	Certification   Certification   `json:"certification"`
 }
 
 type DocumentDetails struct {
@@ -96,47 +92,6 @@ type DateOfIssuance struct {
 	Year  string `json:"year"`
 }
 
-type SourceType string
-
-const (
-	Upload SourceType = "upload"
-	URL    SourceType = "url"
-	File   SourceType = "file"
-)
-
-func (s SourceType) String() string {
-	return string(s)
-}
-
-type Image struct {
-	SourceType SourceType `json:"sourceType"` // "upload" or "url" or "file"
-	Value      string     `json:"value"`
-}
-
 type Certification struct {
-	PayerSignatureImage Image          `json:"payerSignatureImage"`
-	CompanySealImage    Image          `json:"companySealImage"`
-	DateOfIssuance      DateOfIssuance `json:"dateOfIssuance"`
-}
-
-type FillTaxInfo struct {
-	SignatureImage io.Reader
-	SealImage      io.Reader
-}
-
-// ResolveImagesForPDF prepares a 50 Tawi tax certificate structure for PDF generation
-// by creating a version that can hold actual image readers for signature and seal
-func ResolveImagesForPDF(certification Certification, options ...LoadOption) (FillTaxInfo, error) {
-	sign, err := LoadImage(certification.PayerSignatureImage, options...)
-	if err != nil {
-		return FillTaxInfo{}, err
-	}
-	seal, err := LoadImage(certification.CompanySealImage, options...)
-	if err != nil {
-		return FillTaxInfo{}, err
-	}
-	return FillTaxInfo{
-		SignatureImage: sign,
-		SealImage:      seal,
-	}, nil
+	DateOfIssuance DateOfIssuance `json:"dateOfIssuance"`
 }
