@@ -54,7 +54,9 @@ func TextFieldsFromTaxInfo(tax TaxInfo) []TextField {
 	}...)
 
 	// Define text fields for Form 50 ทวิ layout
-	textFields := []TextField{
+	// Pre-allocate for all possible fields to avoid repeated slice growth.
+	textFields := make([]TextField, 0, 128)
+	textFields = append(textFields, []TextField{
 		// Document Details (top right)
 		{Text: tax.DocumentDetails.BookNumber, Dx: 519, Dy: -59, FontSize: 14, Position: TopLeft},
 		{Text: tax.DocumentDetails.DocumentNumber, Dx: 519, Dy: -74, FontSize: 14, Position: TopLeft},
@@ -159,7 +161,7 @@ func TextFieldsFromTaxInfo(tax TaxInfo) []TextField {
 		{Text: tax.Certification.DateOfIssuance.Day, Dx: 52, Dy: 77, FontSize: 14, Position: BottomCenter},
 		{Text: tax.Certification.DateOfIssuance.Month, Dx: 99, Dy: 77, FontSize: 14, Position: BottomCenter},
 		{Text: tax.Certification.DateOfIssuance.Year, Dx: 152, Dy: 77, FontSize: 14, Position: BottomCenter},
-	}
+	}...)
 
 	textFields = append(textFields, payer...)
 	textFields = append(textFields, payee...)

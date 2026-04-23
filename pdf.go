@@ -8,7 +8,6 @@ import (
 	_ "image/png"
 	"io"
 	"math"
-	"os"
 
 	"github.com/signintech/gopdf"
 )
@@ -45,25 +44,10 @@ func anchorToXY(anchor Anchor, dx, dy float64) (float64, float64) {
 // fillCertificate builds the output PDF by importing the template, then placing all
 // text and image fields. The Thai font is embedded once with subsetting.
 func fillCertificate(textFields []TextField, imageFields []ImageField, out io.Writer) error {
-	tpl, err := certificateTemplate()
+	tplPath, err := cachedTemplatePath()
 	if err != nil {
 		return err
 	}
-	tplData, err := io.ReadAll(tpl)
-	if err != nil {
-		return fmt.Errorf("read template: %w", err)
-	}
-	tplFile, err := os.CreateTemp("", "pdf50tawi-tpl-*.pdf")
-	if err != nil {
-		return fmt.Errorf("create temp: %w", err)
-	}
-	tplPath := tplFile.Name()
-	defer os.Remove(tplPath)
-	if _, err := tplFile.Write(tplData); err != nil {
-		tplFile.Close()
-		return fmt.Errorf("write temp template: %w", err)
-	}
-	tplFile.Close()
 
 	pdf := gopdf.GoPdf{}
 	pdf.Start(gopdf.Config{PageSize: gopdf.Rect{W: pageWidth, H: pageHeight}})
@@ -77,8 +61,8 @@ func fillCertificate(textFields []TextField, imageFields []ImageField, out io.Wr
 	pdf.AddPage()
 	pdf.UseImportedTemplate(tplIdx, 0, 0, pageWidth, pageHeight)
 
-	for i, img := range imageFields {
-		if err := placeImage(&pdf, img, i); err != nil {
+	for _, img := range imageFields {
+		if err := placeImage(&pdf, img); err != nil {
 			return err
 		}
 	}
@@ -240,7 +224,7 @@ func drawCheckmark(pdf *gopdf.GoPdf, x, y, size float64) error {
 	return nil
 }
 
-func placeImage(pdf *gopdf.GoPdf, field ImageField, idx int) error {
+func placeImage(pdf *gopdf.GoPdf, field ImageField) error {
 	if field.Reader == nil {
 		return nil
 	}
@@ -258,23 +242,9 @@ func placeImage(pdf *gopdf.GoPdf, field ImageField, idx int) error {
 	h := w * float64(cfg.Height) / float64(cfg.Width)
 	x, y := anchorToXY(field.Pos, field.Dx, field.Dy)
 
-	ext := ".png"
-	if len(data) > 2 && data[0] == 0xFF && data[1] == 0xD8 {
-		ext = ".jpg"
-	}
-
-	tmp, err := os.CreateTemp("", fmt.Sprintf("pdf-img%d-*%s", idx, ext))
+	holder, err := gopdf.ImageHolderByBytes(data)
 	if err != nil {
 		return err
 	}
-	imgPath := tmp.Name()
-	defer os.Remove(imgPath)
-
-	if _, err := tmp.Write(data); err != nil {
-		tmp.Close()
-		return err
-	}
-	tmp.Close()
-
-	return pdf.Image(imgPath, x, y, &gopdf.Rect{W: w, H: h})
+	return pdf.ImageByHolder(holder, x, y, &gopdf.Rect{W: w, H: h})
 }

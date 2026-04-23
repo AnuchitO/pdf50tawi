@@ -11,18 +11,17 @@ import (
 	"os"
 )
 
-func tinyEmptyPNG() []byte {
-	size := 1
-	img := image.NewRGBA(image.Rect(0, 0, size, size))
-	for y := range size {
-		for x := range size {
-			img.Set(x, y, color.Transparent)
-		}
-	}
+// emptyPNG is a 1×1 transparent PNG computed once at package init.
+// Returned by tinyEmptyPNG() to avoid re-encoding on every nil-image call.
+var emptyPNG = func() []byte {
+	img := image.NewRGBA(image.Rect(0, 0, 1, 1))
+	img.Set(0, 0, color.Transparent)
 	var buf bytes.Buffer
 	_ = png.Encode(&buf, img)
 	return buf.Bytes()
-}
+}()
+
+func tinyEmptyPNG() []byte { return emptyPNG }
 
 // LoadImageFromFile loads a PNG or JPEG image from a local file path.
 func LoadImageFromFile(file string) (io.Reader, error) {
