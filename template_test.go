@@ -2,10 +2,10 @@ package pdf50tawi
 
 import "testing"
 
-func TestTax50tawiPDFTemplate(t *testing.T) {
-	r, err := Tax50tawiPDFTemplate()
+func TestCertificateTemplate(t *testing.T) {
+	r, err := certificateTemplate()
 	if err != nil {
-		t.Fatalf("Tax50tawiPDFTemplate error: %v", err)
+		t.Fatalf("certificateTemplate error: %v", err)
 	}
 	buf := make([]byte, 16)
 	n, err := r.Read(buf)

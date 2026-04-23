@@ -6,92 +6,18 @@ import (
 	"strings"
 )
 
-// TextField defines a text value and its position on the certificate form.
-type TextField struct {
-	Text     string
-	Dx       float64
-	Dy       float64
-	FontSize int
-	FontName string
-	Position Anchor
+// IssueWHTCertificatePDF generates a filled WHT certificate PDF.
+func IssueWHTCertificatePDF(outputPDF io.Writer, taxInfo TaxInfo, sign io.Reader, logo io.Reader) error {
+	images := CertificateImageFields(sign, logo)
+	texts := TextFieldsFromTaxInfo(taxInfo)
+	return fillCertificate(texts, images, outputPDF)
 }
 
-// ImageField defines an image (signature or seal) and its position on the certificate form.
-type ImageField struct {
-	Reader   io.Reader
-	Pos      Anchor
-	Dx       float64
-	Dy       float64
-	Scale    float64
-	Opacity  float64
-	Diagonal int
-	OnTop    bool
-}
-
+// CertificateImageFields returns the positioned image fields for the signature and company seal.
 func CertificateImageFields(sign io.Reader, logo io.Reader) []ImageField {
 	return []ImageField{
 		{Reader: ifNil(sign), Pos: Center, Dx: 86, Dy: -313, Scale: 0.1, Opacity: 1, OnTop: true},
 		{Reader: ifNil(logo), Pos: Center, Dx: 212, Dy: -325, Scale: 0.06, Opacity: 1, OnTop: false, Diagonal: 1},
-	}
-}
-
-func ifNil(img io.Reader) io.Reader {
-	if img == nil {
-		return bytes.NewReader(tinyEmptyPNG())
-	}
-	return img
-}
-
-// positionTaxID13Digits creates individual text fields for each digit of a 13-digit tax ID
-func positionTaxID13Digits(taxID string, dy float64, fontSize int) []TextField {
-	digits := strings.ReplaceAll(taxID, " ", "")
-
-	// X positions for 13-digit tax ID (with spacing to align position on each box form)
-	xPositions := []float64{378, 396, 408, 420, 432, 450, 463, 474, 486, 498, 517, 529, 548}
-
-	return position(digits, fontSize, dy, xPositions)
-}
-
-// positionTaxID10Digits creates individual text fields for each digit of a 10-digit tax ID
-func positionTaxID10Digits(taxID string, dy float64, fontSize int) []TextField {
-	digits := strings.ReplaceAll(taxID, " ", "")
-
-	// X positions for 10-digit tax ID (with spacing to align position on each box form)
-	xPositions := []float64{422, 440, 452, 464, 476, 494, 506, 518, 530, 548}
-
-	return position(digits, fontSize, dy, xPositions)
-}
-
-func position(digits string, fontSize int, dy float64, xPositions []float64) []TextField {
-	var fields []TextField
-	for i, digit := range digits {
-		if i < len(xPositions) {
-			fields = append(fields, TextField{
-				Text:     string(digit),
-				Dx:       xPositions[i],
-				Dy:       dy,
-				FontSize: fontSize,
-				Position: TopLeft,
-			})
-		}
-	}
-	return fields
-}
-
-func tick(pnd bool) string {
-	if pnd {
-		return "✓"
-	}
-	return ""
-}
-
-func checkmark(isSet bool, dx float64, dy float64) TextField {
-	return TextField{
-		Text:     tick(isSet),
-		Dx:       dx,
-		Dy:       dy,
-		FontSize: 10,
-		Position: TopLeft,
 	}
 }
 
@@ -211,7 +137,7 @@ func TextFieldsFromTaxInfo(tax TaxInfo) []TextField {
 		{Text: tax.Income6.DatePaid, Dx: 69, Dy: 203, FontSize: 14, Position: BottomCenter},
 		{Text: tax.Income6.AmountPaid, Dx: -109.5, Dy: 203, FontSize: 14, Position: BottomRight},
 		{Text: tax.Income6.TaxWithheld, Dx: -38, Dy: 203, FontSize: 14, Position: BottomRight},
-		//
+
 		// Totals (รวม)
 		{Text: tax.Totals.TotalAmountPaid, Dx: -109.5, Dy: 182, FontSize: 14, Position: BottomRight},
 		{Text: tax.Totals.TotalTaxWithheld, Dx: -38, Dy: 182, FontSize: 14, Position: BottomRight},
@@ -241,7 +167,53 @@ func TextFieldsFromTaxInfo(tax TaxInfo) []TextField {
 	return filterEmptyTextFields(textFields)
 }
 
-// filterEmptyTextFields removes fields with empty or whitespace-only text.
+// positionTaxID13Digits creates individual text fields for each digit of a 13-digit tax ID.
+func positionTaxID13Digits(taxID string, dy float64, fontSize int) []TextField {
+	digits := strings.ReplaceAll(taxID, " ", "")
+	xPositions := []float64{378, 396, 408, 420, 432, 450, 463, 474, 486, 498, 517, 529, 548}
+	return position(digits, fontSize, dy, xPositions)
+}
+
+// positionTaxID10Digits creates individual text fields for each digit of a 10-digit tax ID.
+func positionTaxID10Digits(taxID string, dy float64, fontSize int) []TextField {
+	digits := strings.ReplaceAll(taxID, " ", "")
+	xPositions := []float64{422, 440, 452, 464, 476, 494, 506, 518, 530, 548}
+	return position(digits, fontSize, dy, xPositions)
+}
+
+func position(digits string, fontSize int, dy float64, xPositions []float64) []TextField {
+	var fields []TextField
+	for i, digit := range digits {
+		if i < len(xPositions) {
+			fields = append(fields, TextField{
+				Text:     string(digit),
+				Dx:       xPositions[i],
+				Dy:       dy,
+				FontSize: fontSize,
+				Position: TopLeft,
+			})
+		}
+	}
+	return fields
+}
+
+func tick(pnd bool) string {
+	if pnd {
+		return "✓"
+	}
+	return ""
+}
+
+func checkmark(isSet bool, dx float64, dy float64) TextField {
+	return TextField{
+		Text:     tick(isSet),
+		Dx:       dx,
+		Dy:       dy,
+		FontSize: 10,
+		Position: TopLeft,
+	}
+}
+
 func filterEmptyTextFields(textFields []TextField) []TextField {
 	var filtered []TextField
 	for _, field := range textFields {
@@ -252,9 +224,9 @@ func filterEmptyTextFields(textFields []TextField) []TextField {
 	return filtered
 }
 
-// IssueWHTCertificatePDF generates a filled WHT certificate PDF.
-func IssueWHTCertificatePDF(outputPDF io.Writer, taxInfo TaxInfo, sign io.Reader, logo io.Reader) error {
-	images := CertificateImageFields(sign, logo)
-	texts := TextFieldsFromTaxInfo(taxInfo)
-	return fillCertificate(texts, images, outputPDF)
+func ifNil(img io.Reader) io.Reader {
+	if img == nil {
+		return bytes.NewReader(tinyEmptyPNG())
+	}
+	return img
 }

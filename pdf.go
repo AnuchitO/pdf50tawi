@@ -45,7 +45,7 @@ func anchorToXY(anchor Anchor, dx, dy float64) (float64, float64) {
 // fillCertificate builds the output PDF by importing the template, then placing all
 // text and image fields. The Thai font is embedded once with subsetting.
 func fillCertificate(textFields []TextField, imageFields []ImageField, out io.Writer) error {
-	tpl, err := Tax50tawiPDFTemplate()
+	tpl, err := certificateTemplate()
 	if err != nil {
 		return err
 	}
