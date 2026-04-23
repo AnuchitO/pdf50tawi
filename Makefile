@@ -1,6 +1,6 @@
 .PHONY: run
 run:
-	go run cmd/demo-cli/*.go
+	go run cmd/cli/*.go
 	open tax50tawi-stamped.pdf
 
 .PHONY: run-with-args
