@@ -16,7 +16,6 @@ type TextField struct {
 	Position Anchor
 }
 
-
 // ImageField defines an image (signature or seal) and its position on the certificate form.
 type ImageField struct {
 	Reader   io.Reader
