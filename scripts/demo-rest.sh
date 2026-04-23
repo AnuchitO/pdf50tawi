@@ -16,7 +16,7 @@ SEAL=".demo/demo-logo-1024x1024-square.png"
 # ── Shared tax info JSON (used by all three strategies) ───────────────────────
 read -r -d '' TAX_INFO_JSON <<'JSON' || true
 {
-  "documentDetails": { "bookNumber": "001", "documentNumber": "WHT-001-2568" },
+  "documentDetails": { "bookNumber": "001", "documentNumber": "001" },
   "payer": {
     "taxId": "1234567890123",
     "taxId10Digit": "1234567890",
@@ -26,19 +26,53 @@ read -r -d '' TAX_INFO_JSON <<'JSON' || true
   "payee": {
     "taxId": "3210987654321",
     "taxId10Digit": "1234567890",
-    "name": "นางสาวสมชาย นามสกุลยาวมาก",
-    "address": "555 ต.ทุ่งนา อ.ทุ่งนา จ.ชลบุรี 20000",
-    "sequenceNumber": "1",
-    "pnd_3": true
+    "name": "นางสาวสมชาย นามสกุลยาวมากไหมนะก็ไม่รู้เหมือนกัน",
+    "address": "555 ต.ทุ่งนา  อ.ทุ่งนา  จ.ชลบุรี  12345",
+    "sequenceNumber": "321",
+    "pnd_1a": true,
+    "pnd_1aSpecial": true,
+    "pnd_2": true,
+    "pnd_2a": true,
+    "pnd_3": true,
+    "pnd_3a": true,
+    "pnd_53": true
   },
-  "income40_1": { "datePaid": "01 มกราคม 2568", "amountPaid": "100,000.00", "taxWithheld": "3,000.00" },
+  "income40_1":     { "datePaid": "01 มกราคม 2568", "amountPaid": "401,010.01", "taxWithheld": "12,030.30" },
+  "income40_2":     { "datePaid": "02 ก.พ. 2568",   "amountPaid": "402,020.02", "taxWithheld": "12,060.60" },
+  "income40_3":     { "datePaid": "03 มี.ค. 2568",  "amountPaid": "403,030.03", "taxWithheld": "12,090.90" },
+  "income40_4A":    { "datePaid": "04 เม.ย. 2568",  "amountPaid": "404,040.04", "taxWithheld": "12,121.20" },
+  "income40_4B_1_1": { "datePaid": "05 พ.ค. 2568",  "amountPaid": "411,010.01", "taxWithheld": "12,330.30" },
+  "income40_4B_1_2": { "datePaid": "06 มิ.ย. 2568", "amountPaid": "412,020.02", "taxWithheld": "12,360.60" },
+  "income40_4B_1_3": { "datePaid": "07 ก.ค. 2568",  "amountPaid": "413,030.03", "taxWithheld": "12,390.90" },
+  "income40_4B_1_4_rate": "ร้อยละ 7",
+  "income40_4B_1_4": { "datePaid": "08 ส.ค. 2568",  "amountPaid": "414,040.04", "taxWithheld": "12,421.20" },
+  "income40_4B_2_1": { "datePaid": "09 ก.ย. 2568",  "amountPaid": "421,010.01", "taxWithheld": "12,630.30" },
+  "income40_4B_2_2": { "datePaid": "10 ต.ค. 2568",  "amountPaid": "422,020.02", "taxWithheld": "12,660.60" },
+  "income40_4B_2_3": { "datePaid": "11 พ.ย. 2568",  "amountPaid": "423,030.03", "taxWithheld": "12,690.90" },
+  "income40_4B_2_4": { "datePaid": "12 ธ.ค. 2568",  "amountPaid": "424,040.04", "taxWithheld": "12,721.20" },
+  "income40_4B_2_5_note": "กำไรอื่นๆ",
+  "income40_4B_2_5": { "datePaid": "13 ม.ค. 2568",  "amountPaid": "425,050.05", "taxWithheld": "12,751.50" },
+  "income5":        { "datePaid": "14 ก.พ. 2568",   "amountPaid": "500,010.01", "taxWithheld": "15,000.30" },
+  "income6_note":   "รายได้อื่นๆ",
+  "income6":        { "datePaid": "15 มี.ค. 2568",  "amountPaid": "600,060.06", "taxWithheld": "18,001.80" },
   "totals": {
-    "totalAmountPaid": "100,000.00",
-    "totalTaxWithheld": "3,000.00",
-    "totalTaxWithheldInWords": "สามพันบาทถ้วน"
+    "totalAmountPaid": "5,741,320.36",
+    "totalTaxWithheld": "172,239.60",
+    "totalTaxWithheldInWords": "หนึ่งแสนเจ็ดหมื่นสองพันสองร้อยสามสิบเก้าบาทหกสิบสตางค์"
   },
-  "withholdingType": { "withholdingTax": true },
-  "certification": { "dateOfIssuance": { "day": "1", "month": "มกราคม", "year": "2568" } }
+  "otherPayments": {
+    "governmentPensionFund": "5,000.00",
+    "socialSecurityFund": "750.00",
+    "providentFund": "3,000.00"
+  },
+  "withholdingType": {
+    "withholdingTax": true,
+    "forever": true,
+    "oneTime": true,
+    "other": true,
+    "otherDetails": "อื่นๆ อื่นๆ อื่นๆ อื่นๆ"
+  },
+  "certification": { "dateOfIssuance": { "day": "22", "month": "ธันวาคม", "year": "2568" } }
 }
 JSON
 
