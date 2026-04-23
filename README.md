@@ -10,6 +10,15 @@ Go library for generating Thai Withholding Tax certificates (แบบ 50 ทว
 <img src=".demo/tax50tawi-certificated-demo.png" alt="ตัวอย่างแบบฟอร์ม 50 ทวิ" width="680"/>
 
 ---
+## Demo
+
+```bash
+make demo-cli
+
+or
+
+make demo-rest
+```
 
 ## เริ่มต้นใช้งาน / Quick start
 
