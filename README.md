@@ -99,9 +99,9 @@ sign, err := pdf50tawi.LoadImageFromRequest(req)
 
 ## REST API — 3 วิธีส่งรูปภาพ / 3 image strategies
 
-server ตัวอย่าง (`cmd/rest`) แสดง 3 วิธีส่งรูปภาพมากับ request ให้เลือกใช้ตามความเหมาะสม
+server ตัวอย่าง ([`cmd/rest`](cmd/rest/README.md)) แสดง 3 วิธีส่งรูปภาพมากับ request ให้เลือกใช้ตามความเหมาะสม ดูรายละเอียดเพิ่มเติมได้ที่ [cmd/rest/README.md](cmd/rest/README.md)
 
-The included server (`cmd/rest`) demonstrates three ways to supply images over HTTP. Run the demo to see all three:
+The included server ([`cmd/rest`](cmd/rest/README.md)) demonstrates three ways to supply images over HTTP — see [cmd/rest/README.md](cmd/rest/README.md) for the full reference. Run the demo to see all three strategies in action:
 
 ```bash
 ./scripts/demo-rest.sh
