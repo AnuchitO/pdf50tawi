@@ -77,3 +77,27 @@ func LoadImageFromURL(url string) (io.Reader, error) {
 	}
 	return bytes.NewReader(buf.Bytes()), nil
 }
+
+// LoadImageFromRequest fetches a PNG image by executing the given HTTP request.
+// Use this when the image URL requires custom headers such as authentication:
+//
+//	req, _ := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+//	req.Header.Set("Authorization", "Bearer "+token)
+//	img, err := pdf50tawi.LoadImageFromRequest(req)
+func LoadImageFromRequest(req *http.Request) (io.Reader, error) {
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("unexpected status %d fetching %s", resp.StatusCode, req.URL)
+	}
+
+	var buf bytes.Buffer
+	if _, err = io.Copy(&buf, resp.Body); err != nil {
+		return nil, err
+	}
+	return bytes.NewReader(buf.Bytes()), nil
+}
