@@ -16,7 +16,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/anuchito/pdf50tawi"
+	"github.com/AnuchitO/pdf50tawi"
 )
 
 func main() {

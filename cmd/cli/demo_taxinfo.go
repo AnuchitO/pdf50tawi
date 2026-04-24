@@ -1,6 +1,6 @@
 package main
 
-import "github.com/anuchito/pdf50tawi"
+import "github.com/AnuchitO/pdf50tawi"
 
 func demoTaxInfo() pdf50tawi.TaxInfo {
 	return pdf50tawi.TaxInfo{

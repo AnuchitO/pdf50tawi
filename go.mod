@@ -1,4 +1,4 @@
-module github.com/anuchito/pdf50tawi
+module github.com/AnuchitO/pdf50tawi
 
 go 1.25.0
 
