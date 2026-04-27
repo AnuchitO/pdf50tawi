@@ -23,7 +23,7 @@ make demo-rest
 ## เริ่มต้นใช้งาน / Quick start
 
 ```bash
-go get github.com/anuchito/pdf50tawi
+go get github.com/AnuchitO/pdf50tawi
 ```
 
 ```go
@@ -31,7 +31,7 @@ package main
 
 import (
     "os"
-    "github.com/anuchito/pdf50tawi"
+    "github.com/AnuchitO/pdf50tawi"
 )
 
 func main() {
