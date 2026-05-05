@@ -241,9 +241,10 @@ type TaxInfo struct {
 
 ## ไลบรารีที่ใช้คู่กันได้ / Related libraries
 
-- [bahttext](https://github.com/anuchito/bahttext) — แปลงตัวเลขเป็นตัวอักษรภาษาไทย (บาท)
-- [currency-formatter](https://github.com/anuchito/currency-formatter) — จัดรูปแบบตัวเลขเงินบาท
-- [date-thai-formatter](https://github.com/anuchito/date-thai-formatter) — แปลงวันที่เป็นภาษาไทย (พ.ศ., ชื่อเดือนเต็ม/ย่อ)
+- [pdf50tawi-rust](https://github.com/AnuchitO/pdf50tawi-rust) — Rust version of this library
+- [bahttext](https://github.com/AnuchitO/bahttext) — แปลงตัวเลขเป็นตัวอักษรภาษาไทย (บาท)
+- [currency-formatter](https://github.com/AnuchitO/currency-formatter) — จัดรูปแบบตัวเลขเงินบาท
+- [date-thai-formatter](https://github.com/AnuchitO/date-thai-formatter) — แปลงวันที่เป็นภาษาไทย (พ.ศ., ชื่อเดือนเต็ม/ย่อ)
 
 ---
 
