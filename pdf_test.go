@@ -27,7 +27,7 @@ func TestIssueWHTCertificatePDF(t *testing.T) {
 
 func TestFillCertificateWithEmptyFields(t *testing.T) {
 	var out bytes.Buffer
-	if err := fillCertificate(nil, nil, &out); err != nil {
+	if err := fillCertificate(&out, nil, nil); err != nil {
 		t.Fatalf("fillCertificate error: %v", err)
 	}
 	if !bytes.HasPrefix(out.Bytes(), []byte("%PDF")) {

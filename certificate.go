@@ -10,7 +10,7 @@ import (
 func IssueWHTCertificatePDF(outputPDF io.Writer, taxInfo TaxInfo, sign io.Reader, logo io.Reader) error {
 	images := CertificateImageFields(sign, logo)
 	texts := TextFieldsFromTaxInfo(taxInfo)
-	return fillCertificate(texts, images, outputPDF)
+	return fillCertificate(outputPDF, texts, images)
 }
 
 // CertificateImageFields returns the positioned image fields for the signature and company seal.

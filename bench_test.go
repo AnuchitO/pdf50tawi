@@ -72,7 +72,7 @@ func BenchmarkFillCertificateTextOnly(b *testing.B) {
 	b.ReportAllocs()
 	b.ResetTimer()
 	for b.Loop() {
-		if err := fillCertificate(texts, images, io.Discard); err != nil {
+		if err := fillCertificate(io.Discard, texts, images); err != nil {
 			b.Fatal(err)
 		}
 	}
@@ -87,7 +87,7 @@ func BenchmarkFillCertificateWithImages(b *testing.B) {
 	b.ResetTimer()
 	for b.Loop() {
 		images := CertificateImageFields(bytes.NewReader(png), bytes.NewReader(png))
-		if err := fillCertificate(texts, images, io.Discard); err != nil {
+		if err := fillCertificate(io.Discard, texts, images); err != nil {
 			b.Fatal(err)
 		}
 	}
